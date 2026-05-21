@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'n8n/workflows/**.json'
+      - 'n8n/data-tables/**.json'
+      - 'n8n/variables.json'
   workflow_dispatch:
     inputs:
       client:
@@ -32,6 +34,18 @@ jobs:
 
       - name: Install n8n-cli
         run: npm install -g github:yourusername/n8n-cli
+
+      - name: Push variables to ${{ matrix.client }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli variable push --env ${{ matrix.client }}
+
+      - name: Push data tables to ${{ matrix.client }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli data-table push --all --env ${{ matrix.client }}
 
       - name: Push workflows to ${{ matrix.client }}
         env:

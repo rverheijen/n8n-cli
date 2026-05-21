@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'n8n/workflows/**.json'
+      - 'n8n/data-tables/**.json'
+      - 'n8n/variables.json'
 
 jobs:
   deploy:
@@ -19,6 +21,18 @@ jobs:
 
       - name: Install n8n-cli
         run: npm install -g github:yourusername/n8n-cli
+
+      - name: Push variables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli variable push
+
+      - name: Push data tables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli data-table push --all
 
       - name: Push workflows
         env:

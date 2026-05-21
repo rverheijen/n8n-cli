@@ -27,6 +27,14 @@ import {
   pushDataTable,
   pushAllDataTables,
 } from '../lib/data-table.js';
+import {
+  DEFAULT_CREDENTIALS_FILE,
+  pullCredentials,
+  pushCredentials,
+  mapCredentials,
+  readCredentialsFile,
+  writeCredentialsFile,
+} from '../lib/credential.js';
 
 // --- Bootstrap ---
 
@@ -40,9 +48,10 @@ const currentEnvName = deriveEnvName(
   envName,
 );
 
-const workflowsDir  = dir ?? DEFAULT_WORKFLOWS_DIR;
-const tablesDir     = dir ?? DEFAULT_DATA_TABLES_DIR;
-const variablesFile = dir ?? DEFAULT_VARIABLES_FILE;
+const workflowsDir    = dir ?? DEFAULT_WORKFLOWS_DIR;
+const tablesDir       = dir ?? DEFAULT_DATA_TABLES_DIR;
+const variablesFile   = dir ?? DEFAULT_VARIABLES_FILE;
+const credentialsFile = dir ?? DEFAULT_CREDENTIALS_FILE;
 
 // --- Help text for custom commands ---
 
@@ -145,6 +154,57 @@ const DATA_TABLE_HELP = {
     '  Reads a JSON file with name, columns, upsertKey and rows. Creates the',
     '  table if it does not exist, then upserts all rows using upsertKey as',
     '  the match column.',
+  ],
+};
+
+const CREDENTIAL_HELP = {
+  pull: [
+    'Fetch all credentials and save to credentials.json (metadata only, no secrets)',
+    '',
+    'USAGE',
+    `  $ n8n-cli credential pull [--dir <path>]`,
+    '',
+    'FLAGS',
+    `  --dir <path>       Target file  (default: ./${DEFAULT_CREDENTIALS_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Saves id, name, and type for each credential. Credential values and',
+    '  secrets are never fetched or stored.',
+  ],
+  push: [
+    'Create credential stubs on target and update the credential mapping',
+    '',
+    'USAGE',
+    '  $ n8n-cli credential push [--dir <path>] [--env <name>]',
+    '',
+    'FLAGS',
+    `  --dir <path>       Source file  (default: ./${DEFAULT_CREDENTIALS_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Creates an empty credential stub on the target for each entry in',
+    '  credentials.json. Automatically updates n8n-cli.mapping.json with the',
+    '  source→target ID mapping. Already-mapped credentials are skipped.',
+    '  After pushing, fill in the credential values on the target instance.',
+  ],
+  map: [
+    'Match credentials by name+type and update mapping (no stubs created)',
+    '',
+    'USAGE',
+    '  $ n8n-cli credential map [--dir <path>] [--env <name>]',
+    '',
+    'FLAGS',
+    `  --dir <path>       Source file  (default: ./${DEFAULT_CREDENTIALS_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Fetches credentials from the target, matches them to the source list',
+    '  by name and type, and writes the mapping to n8n-cli.mapping.json.',
+    '  Use this when credentials already exist on both instances.',
   ],
 };
 
@@ -361,6 +421,58 @@ if (args[0] === 'data-table' && args[1] === 'push') {
   const success = pushDataTable(file, currentEnvName, manifest, env);
   writeManifest(manifest);
   process.exit(success ? 0 : 1);
+}
+
+// credential --help
+if (args[0] === 'credential' && (args[1] === '--help' || args[1] === '-h')) {
+  const result = runCli(args, env);
+  process.stdout.write(result.stdout);
+  process.stdout.write(
+    'CUSTOM COMMANDS\n' +
+    `  credential pull        Fetch all credentials (metadata only) to ./${DEFAULT_CREDENTIALS_FILE}\n` +
+    `  credential push        Create stubs on target and update mapping\n` +
+    `  credential map         Match credentials by name+type and update mapping\n`,
+  );
+  process.exit(result.status ?? 0);
+}
+
+// credential pull/push/map --help
+if (args[0] === 'credential' && CREDENTIAL_HELP[args[1]] &&
+    (args.includes('--help') || args.includes('-h'))) {
+  console.log(CREDENTIAL_HELP[args[1]].join('\n'));
+  process.exit(0);
+}
+
+// credential pull
+if (args[0] === 'credential' && args[1] === 'pull') {
+  console.log('Fetching credentials...');
+  const credentials = pullCredentials(env);
+  if (!credentials) process.exit(1);
+  const filepath = credentialsFile === DEFAULT_CREDENTIALS_FILE ? DEFAULT_CREDENTIALS_FILE : credentialsFile;
+  writeCredentialsFile(filepath, credentials);
+  console.log(`Saved ${credentials.length} credential(s) to ${filepath}`);
+  process.exit(0);
+}
+
+// credential push
+if (args[0] === 'credential' && args[1] === 'push') {
+  const filepath = credentialsFile === DEFAULT_CREDENTIALS_FILE ? DEFAULT_CREDENTIALS_FILE : credentialsFile;
+  const credentials = readCredentialsFile(filepath);
+  console.log(`Pushing ${credentials.length} credential(s) to env: ${currentEnvName}\n`);
+  const { created, skipped, failed } = pushCredentials(credentials, currentEnvName, env);
+  console.log(`\nDone — ${created} created, ${skipped} skipped${failed > 0 ? `, ${failed} failed` : ''}`);
+  process.exit(failed > 0 ? 1 : 0);
+}
+
+// credential map
+if (args[0] === 'credential' && args[1] === 'map') {
+  const filepath = credentialsFile === DEFAULT_CREDENTIALS_FILE ? DEFAULT_CREDENTIALS_FILE : credentialsFile;
+  const credentials = readCredentialsFile(filepath);
+  console.log(`Matching ${credentials.length} credential(s) against env: ${currentEnvName}\n`);
+  const result = mapCredentials(credentials, currentEnvName, env);
+  if (!result) process.exit(1);
+  console.log(`\nDone — ${result.matched} mapped, ${result.unmatched} unmatched`);
+  process.exit(0);
 }
 
 // Default: pass all arguments straight through to the real CLI

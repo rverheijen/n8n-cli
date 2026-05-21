@@ -219,6 +219,48 @@ n8n-cli data-table push --all --env client-a
 
 ---
 
+## Credential commands
+
+Credential metadata is stored in `n8n/credentials.json` as a flat list. Credential values and secrets are **never** fetched or stored — only `id`, `name`, and `type`.
+
+```json
+[
+  { "id": "src-cred-abc", "name": "Postgres Production", "type": "postgres" },
+  { "id": "src-cred-def", "name": "Slack Bot",           "type": "slackApi" }
+]
+```
+
+### `credential pull`
+
+Fetch all credentials from the instance and save metadata to `n8n/credentials.json`.
+
+```bash
+n8n-cli credential pull
+n8n-cli credential pull --env staging
+```
+
+### `credential push`
+
+Create empty credential stubs on a target instance for each entry in `credentials.json`. Automatically updates `n8n-cli.mapping.json` with the source→target ID mapping. Already-mapped credentials are skipped.
+
+```bash
+n8n-cli credential push --env client-a
+```
+
+After pushing, fill in the actual credential values on the target instance.
+
+### `credential map`
+
+Match credentials that already exist on both instances by name and type, and write the mapping to `n8n-cli.mapping.json`. No stubs are created.
+
+```bash
+n8n-cli credential map --env client-a
+```
+
+Use this when credentials already exist on both instances and you only need to establish the ID mapping.
+
+---
+
 ## Credential mapping
 
 Workflow JSON files contain credential IDs that are instance-specific. When pushing the same workflow to different environments, those IDs must be remapped.

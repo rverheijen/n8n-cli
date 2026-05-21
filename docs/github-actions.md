@@ -104,7 +104,39 @@ Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targetin
 
 Workflow JSON files contain credential IDs that are instance-specific. When pushing the same workflow to different environments, those IDs need to be remapped.
 
-Create `n8n/n8n-cli.mapping.json` and commit it:
+`n8n-cli` provides three commands to set up and maintain `n8n-cli.mapping.json` — choose based on whether the credentials already exist on the target:
+
+### Option A — Credentials already exist on both instances
+
+Use `credential map` to match by name and type automatically:
+
+```bash
+# Pull credential metadata from the source instance first
+n8n-cli credential pull
+
+# Match against target by name+type and write the mapping
+n8n-cli credential map --env client-a
+n8n-cli credential map --env client-b
+```
+
+### Option B — Credentials don't exist on the target yet
+
+Use `credential push` to create empty stubs and auto-populate the mapping:
+
+```bash
+# Pull credential metadata from the source instance first
+n8n-cli credential pull
+
+# Create stubs on target and write the mapping
+n8n-cli credential push --env client-a
+n8n-cli credential push --env client-b
+```
+
+Then fill in the actual credential values on each target instance.
+
+### Option C — Manual mapping
+
+Edit `n8n/n8n-cli.mapping.json` directly:
 
 ```json
 {
@@ -127,7 +159,7 @@ To find credential IDs on an instance:
 n8n-cli credential list --json --env-file .env.client-a
 ```
 
-The mapping is applied automatically on every `workflow push`. Missing mappings produce a warning but do not fail the deployment.
+The mapping is applied automatically on every `workflow push`. After applying the mapping, `n8n-cli` also validates that all credential IDs referenced in the workflow exist on the target instance — missing IDs produce a warning but do not fail the deployment.
 
 ---
 
@@ -381,6 +413,7 @@ jobs:
 n8n-cli workflow pull --all
 n8n-cli variable pull
 n8n-cli data-table pull --all
+n8n-cli credential pull
 
 # Edit files in n8n/workflows/, n8n/data-tables/, n8n/variables.json
 
@@ -413,7 +446,13 @@ n8n-cli data-table push --all --env-file .env.client-a
 1. Create a new GitHub Environment named `client-x` and add its `N8N_API_URL` and `N8N_API_KEY` secrets.
 2. Add `client-x` to the matrix in `cd-clients.yml`.
 3. Create `.env.client-x` locally (gitignored) for local access.
-4. Add credential mappings for `client-x` to `n8n/n8n-cli.mapping.json`.
+4. Pull credential metadata from the source instance and set up the mapping for `client-x`:
+   ```bash
+   n8n-cli credential pull
+   # Use 'map' if credentials already exist on client-x, or 'push' to create stubs:
+   n8n-cli credential map --env client-x
+   # or: n8n-cli credential push --env client-x
+   ```
 5. Run the initial deployment locally to populate the manifest:
    ```bash
    n8n-cli variable push --env client-x

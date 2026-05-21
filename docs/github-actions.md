@@ -233,7 +233,7 @@ n8n-cli data-table push --all
 
 **`.github/workflows/ci.yml`**
 
-Runs on every pull request that touches workflow files. Validates each changed file before merge.
+Runs on every pull request that touches workflow files. Validates each changed file and checks it matches the remote version on the instance.
 
 ```yaml
 name: CI
@@ -265,7 +265,22 @@ jobs:
             echo "Validating $file..."
             n8n-cli workflow validate "$file"
           done
+
+      - name: Diff changed workflows against remote
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'n8n/workflows/*.json' | \
+          while read file; do
+            [ -f "$file" ] || continue
+            echo "Diffing $file..."
+            n8n-cli workflow diff "$file" || true
+          done
 ```
+
+The diff step uses `|| true` so it never blocks the PR — it prints the diff for review without failing the build. Remove `|| true` if you want to block merges when local and remote are out of sync.
 
 ---
 
@@ -417,6 +432,9 @@ n8n-cli credential pull
 
 # Edit files in n8n/workflows/, n8n/data-tables/, n8n/variables.json
 
+# Check for changes on the instance before editing locally
+n8n-cli workflow diff n8n/workflows/my-workflow.json
+
 # Validate workflows before committing
 n8n-cli workflow validate n8n/workflows/my-workflow.json
 
@@ -466,6 +484,9 @@ From this point on, GitHub Actions handles deployments on every push to main.
 ---
 
 ## Troubleshooting
+
+**A workflow was edited directly on the instance and is out of sync with git**
+Run `workflow diff` to see what changed, then either pull the remote version (`workflow pull <id>`) or push the git version back (`workflow push <file>`).
 
 **Workflows are being created as duplicates instead of updated**
 The manifest (`n8n/n8n-cli.manifest.json`) is either missing or doesn't have an entry for that environment. Run `workflow push` once locally with the correct `--env` flag to populate the manifest, then commit it.

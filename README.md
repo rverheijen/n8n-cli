@@ -109,6 +109,31 @@ Validate a workflow JSON file. Checks for required fields (`name`, `nodes`, `con
 n8n-cli workflow validate n8n/workflows/1234.json
 ```
 
+### `workflow diff <file>`
+
+Compare a local workflow file against the version currently on the instance. Shows added, removed and changed nodes, connection changes, and metadata differences (name, settings, tags).
+
+```bash
+n8n-cli workflow diff n8n/workflows/1234.json
+n8n-cli workflow diff n8n/workflows/1234.json --env staging
+```
+
+Exits `1` if differences are found, `0` if up to date. Useful for checking whether a workflow was edited directly on the instance without the change being committed to git.
+
+Example output:
+
+```
+1234.json vs remote (env: staging)
+
+  name: "Old Name" -> "New Name"
+  + HTTP Request (n8n-nodes-base.httpRequest)
+  ~ Webhook
+      parameters: {"path":"/old"} -> {"path":"/new"}
+  - Slack (n8n-nodes-base.slack)
+  + connection: HTTP Request -> Set
+  - connection: Webhook -> Slack
+```
+
 ---
 
 ## Variable commands

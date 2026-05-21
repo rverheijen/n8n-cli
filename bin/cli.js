@@ -46,7 +46,7 @@ const variablesFile = dir ?? DEFAULT_VARIABLES_FILE;
 
 // --- Help text for custom commands ---
 
-const CUSTOM_HELP = {
+const WORKFLOW_HELP = {
   pull: [
     'Fetch a workflow by ID and save it to <id>.json',
     '',
@@ -85,6 +85,69 @@ const CUSTOM_HELP = {
   ],
 };
 
+const VARIABLE_HELP = {
+  pull: [
+    'Fetch all variables from the instance and save to variables.json',
+    '',
+    'USAGE',
+    `  $ n8n-cli variable pull [--dir <path>]`,
+    '',
+    'FLAGS',
+    `  --dir <path>       Target file  (default: ./${DEFAULT_VARIABLES_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+  ],
+  push: [
+    'Push variables to the instance (create or update)',
+    '',
+    'USAGE',
+    '  $ n8n-cli variable push [--dir <path>]',
+    '',
+    'FLAGS',
+    `  --dir <path>       Source file  (default: ./${DEFAULT_VARIABLES_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Reads key/value pairs from variables.json. Creates missing variables',
+    '  and updates existing ones. Does not delete variables not in the file.',
+  ],
+};
+
+const DATA_TABLE_HELP = {
+  pull: [
+    'Fetch a data table and save its schema and rows to a JSON file',
+    '',
+    'USAGE',
+    '  $ n8n-cli data-table pull <name> [--dir <path>]',
+    '  $ n8n-cli data-table pull --all  [--dir <path>]',
+    '',
+    'FLAGS',
+    '  --all              Pull all data tables',
+    `  --dir <path>       Target directory  (default: ./${DEFAULT_DATA_TABLES_DIR})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+  ],
+  push: [
+    'Push a data table file (create table if missing, upsert rows)',
+    '',
+    'USAGE',
+    '  $ n8n-cli data-table push <file>',
+    '  $ n8n-cli data-table push --all [--dir <path>]',
+    '',
+    'FLAGS',
+    '  --all              Push all data tables in the target directory',
+    `  --dir <path>       Source directory  (default: ./${DEFAULT_DATA_TABLES_DIR})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Reads a JSON file with name, columns, upsertKey and rows. Creates the',
+    '  table if it does not exist, then upserts all rows using upsertKey as',
+    '  the match column.',
+  ],
+};
+
 // --- Command routing ---
 
 // workflow --help / -h
@@ -103,9 +166,23 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
 }
 
 // workflow pull/push/validate --help
-if (args[0] === 'workflow' && CUSTOM_HELP[args[1]] &&
+if (args[0] === 'workflow' && WORKFLOW_HELP[args[1]] &&
     (args.includes('--help') || args.includes('-h'))) {
-  console.log(CUSTOM_HELP[args[1]].join('\n'));
+  console.log(WORKFLOW_HELP[args[1]].join('\n'));
+  process.exit(0);
+}
+
+// variable pull/push --help
+if (args[0] === 'variable' && VARIABLE_HELP[args[1]] &&
+    (args.includes('--help') || args.includes('-h'))) {
+  console.log(VARIABLE_HELP[args[1]].join('\n'));
+  process.exit(0);
+}
+
+// data-table pull/push --help
+if (args[0] === 'data-table' && DATA_TABLE_HELP[args[1]] &&
+    (args.includes('--help') || args.includes('-h'))) {
+  console.log(DATA_TABLE_HELP[args[1]].join('\n'));
   process.exit(0);
 }
 

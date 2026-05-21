@@ -138,6 +138,7 @@ Push variables from `n8n/variables.json` to the instance. Creates missing variab
 ```bash
 n8n-cli variable push
 n8n-cli variable push --env client-a
+n8n-cli variable push path/to/vars.json --env client-a
 ```
 
 ---
@@ -245,6 +246,7 @@ Create empty credential stubs on a target instance for each entry in `credential
 
 ```bash
 n8n-cli credential push --env client-a
+n8n-cli credential push path/to/credentials.json --env client-a
 ```
 
 After pushing, fill in the actual credential values on the target instance.

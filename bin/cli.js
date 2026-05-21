@@ -110,7 +110,8 @@ const VARIABLE_HELP = {
     'Push variables to the instance (create or update)',
     '',
     'USAGE',
-    '  $ n8n-cli variable push [--dir <path>]',
+    '  $ n8n-cli variable push [<file>]',
+    `  $ n8n-cli variable push [--dir <path>]`,
     '',
     'FLAGS',
     `  --dir <path>       Source file  (default: ./${DEFAULT_VARIABLES_FILE})`,
@@ -118,8 +119,9 @@ const VARIABLE_HELP = {
     '  --env-file <path>  Load a specific .env file',
     '',
     'DESCRIPTION',
-    '  Reads key/value pairs from variables.json. Creates missing variables',
-    '  and updates existing ones. Does not delete variables not in the file.',
+    '  Reads key/value pairs from variables.json (or <file> if given). Creates',
+    '  missing variables and updates existing ones. Does not delete variables',
+    '  not in the file.',
   ],
 };
 
@@ -177,6 +179,7 @@ const CREDENTIAL_HELP = {
     'Create credential stubs on target and update the credential mapping',
     '',
     'USAGE',
+    '  $ n8n-cli credential push [<file>] [--env <name>]',
     '  $ n8n-cli credential push [--dir <path>] [--env <name>]',
     '',
     'FLAGS',
@@ -186,8 +189,9 @@ const CREDENTIAL_HELP = {
     '',
     'DESCRIPTION',
     '  Creates an empty credential stub on the target for each entry in',
-    '  credentials.json. Automatically updates n8n-cli.mapping.json with the',
-    '  source→target ID mapping. Already-mapped credentials are skipped.',
+    '  credentials.json (or <file> if given). Automatically updates',
+    '  n8n-cli.mapping.json with the source→target ID mapping.',
+    '  Already-mapped credentials are skipped.',
     '  After pushing, fill in the credential values on the target instance.',
   ],
   map: [
@@ -337,7 +341,7 @@ if (args[0] === 'variable' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
     `  variable pull        Fetch all variables and save to ./${DEFAULT_VARIABLES_FILE}\n` +
-    `  variable push        Push variables from ./${DEFAULT_VARIABLES_FILE} (create or update)\n`,
+    `  variable push [<file>]  Push variables from file (default: ./${DEFAULT_VARIABLES_FILE})\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -354,7 +358,8 @@ if (args[0] === 'variable' && args[1] === 'pull') {
 
 // variable push
 if (args[0] === 'variable' && args[1] === 'push') {
-  const filepath  = variablesFile === DEFAULT_VARIABLES_FILE ? DEFAULT_VARIABLES_FILE : variablesFile;
+  const file      = args[2] && !args[2].startsWith('--') ? args[2] : null;
+  const filepath  = file ?? (variablesFile === DEFAULT_VARIABLES_FILE ? DEFAULT_VARIABLES_FILE : variablesFile);
   const variables = readVariablesFile(filepath);
   console.log(`Pushing ${variables.length} variable(s) to env: ${currentEnvName}\n`);
   const { created, updated, failed } = pushVariables(variables, env);
@@ -430,7 +435,7 @@ if (args[0] === 'credential' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
     `  credential pull        Fetch all credentials (metadata only) to ./${DEFAULT_CREDENTIALS_FILE}\n` +
-    `  credential push        Create stubs on target and update mapping\n` +
+    `  credential push [<file>]  Create stubs on target and update mapping\n` +
     `  credential map         Match credentials by name+type and update mapping\n`,
   );
   process.exit(result.status ?? 0);
@@ -456,7 +461,8 @@ if (args[0] === 'credential' && args[1] === 'pull') {
 
 // credential push
 if (args[0] === 'credential' && args[1] === 'push') {
-  const filepath = credentialsFile === DEFAULT_CREDENTIALS_FILE ? DEFAULT_CREDENTIALS_FILE : credentialsFile;
+  const file        = args[2] && !args[2].startsWith('--') ? args[2] : null;
+  const filepath    = file ?? (credentialsFile === DEFAULT_CREDENTIALS_FILE ? DEFAULT_CREDENTIALS_FILE : credentialsFile);
   const credentials = readCredentialsFile(filepath);
   console.log(`Pushing ${credentials.length} credential(s) to env: ${currentEnvName}\n`);
   const { created, skipped, failed } = pushCredentials(credentials, currentEnvName, env);

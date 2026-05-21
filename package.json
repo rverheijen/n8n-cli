@@ -1,0 +1,22 @@
+{
+  "name": "n8n-cli",
+  "version": "1.0.0",
+  "description": "A custom wrapper around the official n8n-cli that injects our best practices into standard CLI commands.",
+  "type": "module",
+  "main": "bin/cli.js",
+  "bin": {
+    "n8n-cli": "./bin/cli.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@n8n/cli": "^0.5.0"
+  },
+  "keywords": [
+    "n8n",
+    "n8n-cli",
+    "wrapper"
+  ],
+  "license": "Sustainable Use License"
+}

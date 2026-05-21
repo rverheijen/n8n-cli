@@ -30,6 +30,12 @@ n8n-cli workflow pull 1234
 # → saves 1234.json
 ```
 
+## Uninstall
+
+```bash
+npm uninstall -g n8n-cli
+```
+
 ## Configuration
 
 | Environment variable | Description |

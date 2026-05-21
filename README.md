@@ -19,6 +19,17 @@ n8n-cli workflow list
 n8n-cli workflow get <id>
 ```
 
+### Custom commands
+
+#### `workflow pull <id>`
+
+Fetches a workflow by ID and saves it to `<id>.json` in the current directory.
+
+```bash
+n8n-cli workflow pull 1234
+# → saves 1234.json
+```
+
 ## Configuration
 
 | Environment variable | Description |

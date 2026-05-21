@@ -44,6 +44,7 @@ your-project/
 │   ├── data-tables/
 │   │   └── settings.json           schema + seed rows for each data table
 │   ├── variables.json              instance variables (key/value pairs)
+│   ├── credentials.json            credential metadata (id, name, type — no secrets)
 │   ├── n8n-cli.manifest.json       tracks workflow + data-table IDs per environment
 │   └── n8n-cli.mapping.json        credential ID mapping per environment
 ├── .env                            local dev (gitignored)
@@ -55,6 +56,7 @@ your-project/
 - All files under `n8n/` except `.env*` files
 - `n8n-cli.manifest.json`: tracks remote IDs so subsequent deployments update instead of duplicate
 - `n8n-cli.mapping.json`: contains only credential IDs, no secrets
+- `credentials.json`: contains only credential metadata (id, name, type), no secrets
 
 **Never commit:**
 - `.env`, `.env.*`: contain API keys
@@ -174,18 +176,18 @@ The mapping is applied on every `workflow push`. After remapping, `n8n-cli` chec
 ]
 ```
 
-Pull current variables from an instance:
+| Command | Description |
+|---|---|
+| `variable pull` | Fetch all variables and save to `n8n/variables.json` |
+| `variable push [<file>]` | Push variables — creates missing, updates existing |
 
 ```bash
 n8n-cli variable pull
 n8n-cli variable pull --env client-a
-```
 
-Push variables to an instance (creates missing, updates existing):
-
-```bash
 n8n-cli variable push
 n8n-cli variable push --env client-a
+n8n-cli variable push path/to/vars.json --env client-a
 ```
 
 ---
@@ -211,19 +213,51 @@ Each file in `n8n/data-tables/` defines one data table with its columns and seed
 
 `upsertKey` specifies which column to match on when upserting rows. Defaults to the first column if omitted.
 
-Pull a data table from an instance:
+| Command | Description |
+|---|---|
+| `data-table pull <name>` | Fetch a single data table by name |
+| `data-table pull --all` | Fetch all data tables |
+| `data-table push <file>` | Push a data table (create if missing, upsert rows) |
+| `data-table push --all` | Push all data tables in the source directory |
 
 ```bash
 n8n-cli data-table pull settings
 n8n-cli data-table pull --all
-```
 
-Push data tables (creates table if missing, upserts rows):
-
-```bash
 n8n-cli data-table push n8n/data-tables/settings.json
 n8n-cli data-table push --all
+n8n-cli data-table push --all --env client-a
 ```
+
+---
+
+## Credentials
+
+`n8n/credentials.json` stores credential metadata. Credential values and secrets are never fetched or stored — only `id`, `name`, and `type`.
+
+```json
+[
+  { "id": "src-cred-abc", "name": "Postgres Production", "type": "postgres" },
+  { "id": "src-cred-def", "name": "Slack Bot",           "type": "slackApi" }
+]
+```
+
+| Command | Description |
+|---|---|
+| `credential pull` | Fetch credential metadata from the instance |
+| `credential push [<file>]` | Create stubs on target and populate the mapping |
+| `credential map [<file>]` | Match credentials by name+type and update mapping |
+
+```bash
+# Pull metadata from the source instance
+n8n-cli credential pull
+
+# Set up the mapping for a target environment
+n8n-cli credential map --env client-a      # if credentials already exist on target
+n8n-cli credential push --env client-a     # if credentials need to be created on target
+```
+
+See [Credential mapping](#credential-mapping) above for the full setup workflow.
 
 ---
 
@@ -430,10 +464,13 @@ n8n-cli variable pull
 n8n-cli data-table pull --all
 n8n-cli credential pull
 
-# Edit files in n8n/workflows/, n8n/data-tables/, n8n/variables.json
+# Set up credential mapping for each target environment
+n8n-cli credential map --env staging     # or: credential push --env staging
 
-# Check for changes on the instance before editing locally
+# Check for instance changes before editing locally
 n8n-cli workflow diff n8n/workflows/my-workflow.json
+
+# Edit files in n8n/workflows/, n8n/data-tables/, n8n/variables.json
 
 # Validate workflows before committing
 n8n-cli workflow validate n8n/workflows/my-workflow.json

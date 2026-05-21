@@ -20,6 +20,28 @@ npm uninstall -g n8n-cli
 
 ---
 
+## Command overview
+
+| Command | Description |
+|---|---|
+| `workflow pull <id>` | Fetch a workflow by ID and save to `<id>.json` |
+| `workflow pull --all` | Fetch all workflows |
+| `workflow push <file>` | Push a workflow file (create or update) |
+| `workflow push --all` | Push all workflows in the source directory |
+| `workflow validate <file>` | Validate a workflow JSON file |
+| `workflow diff <file>` | Compare a local file against the remote version |
+| `variable pull` | Fetch all variables |
+| `variable push [<file>]` | Push variables (create or update) |
+| `data-table pull <name>` | Fetch a data table by name |
+| `data-table pull --all` | Fetch all data tables |
+| `data-table push <file>` | Push a data table file |
+| `data-table push --all` | Push all data tables in the source directory |
+| `credential pull` | Fetch credential metadata (no secrets) |
+| `credential push [<file>]` | Create credential stubs on target and update mapping |
+| `credential map [<file>]` | Match credentials by name and type, update mapping |
+
+---
+
 ## Configuration
 
 ### Environment variables
@@ -52,13 +74,13 @@ In CI (e.g. GitHub Actions), set `N8N_API_URL` and `N8N_API_KEY` as environment 
 
 ## Global flags
 
-These flags are available on all custom commands and are stripped before passing through to the official CLI:
+These flags apply to all custom commands and are stripped before passing to the official CLI:
 
 | Flag | Description |
 |---|---|
 | `--env <name>` | Set the environment name (used as manifest key, loads `.env.<name>` if present) |
 | `--env-file <path>` | Load a specific `.env` file (errors if not found) |
-| `--dir <path>` | Override the default source/target directory |
+| `--dir <path>` | Override the default source/target directory or file |
 | `--all` | Operate on all items in the target directory |
 
 ---
@@ -85,7 +107,7 @@ n8n-cli workflow pull --all --dir ./backup
 
 ### `workflow push <file>`
 
-Push a single workflow file to the instance. Creates a new workflow if it has never been pushed to this environment, or updates the existing one.
+Push a workflow file to the instance. Creates a new workflow on first push to an environment, updates it on subsequent pushes.
 
 ```bash
 n8n-cli workflow push n8n/workflows/1234.json
@@ -111,14 +133,14 @@ n8n-cli workflow validate n8n/workflows/1234.json
 
 ### `workflow diff <file>`
 
-Compare a local workflow file against the version currently on the instance. Shows added, removed and changed nodes, connection changes, and metadata differences (name, settings, tags).
+Compare a local workflow file against the version currently on the instance. Shows added, removed and changed nodes, connection changes, and metadata differences (name, settings, tags). Volatile fields like `updatedAt` and node positions are ignored.
 
 ```bash
 n8n-cli workflow diff n8n/workflows/1234.json
 n8n-cli workflow diff n8n/workflows/1234.json --env staging
 ```
 
-Exits `1` if differences are found, `0` if up to date. Useful for checking whether a workflow was edited directly on the instance without the change being committed to git.
+Exits `1` if differences are found, `0` if up to date. Useful for spotting workflows that were edited directly on the instance without the change being committed to git.
 
 Example output:
 
@@ -156,9 +178,9 @@ n8n-cli variable pull
 n8n-cli variable pull --env staging
 ```
 
-### `variable push`
+### `variable push [<file>]`
 
-Push variables from `n8n/variables.json` to the instance. Creates missing variables, updates existing ones.
+Push variables to the instance. Creates missing variables, updates existing ones. Does not delete variables not in the file.
 
 ```bash
 n8n-cli variable push
@@ -194,6 +216,7 @@ Fetch a single data table by name and save to `n8n/data-tables/<name>.json`.
 
 ```bash
 n8n-cli data-table pull settings
+n8n-cli data-table pull settings --dir ./backup
 ```
 
 ### `data-table pull --all`
@@ -202,6 +225,7 @@ Fetch all data tables and save each to `n8n/data-tables/`.
 
 ```bash
 n8n-cli data-table pull --all
+n8n-cli data-table pull --all --dir ./backup
 ```
 
 ### `data-table push <file>`
@@ -221,6 +245,49 @@ Push all data table files from `n8n/data-tables/`.
 n8n-cli data-table push --all
 n8n-cli data-table push --all --env client-a
 ```
+
+---
+
+## Credential commands
+
+Credential metadata is stored in `n8n/credentials.json` as a flat list. Credential values and secrets are **never** fetched or stored. Only `id`, `name`, and `type` are saved.
+
+```json
+[
+  { "id": "src-cred-abc", "name": "Postgres Production", "type": "postgres" },
+  { "id": "src-cred-def", "name": "Slack Bot",           "type": "slackApi" }
+]
+```
+
+### `credential pull`
+
+Fetch all credentials from the instance and save metadata to `n8n/credentials.json`.
+
+```bash
+n8n-cli credential pull
+n8n-cli credential pull --env staging
+```
+
+### `credential push [<file>]`
+
+Create empty credential stubs on a target instance for each entry in `credentials.json`. Updates `n8n-cli.mapping.json` with the source->target ID mapping. Already-mapped credentials are skipped.
+
+```bash
+n8n-cli credential push --env client-a
+n8n-cli credential push path/to/credentials.json --env client-a
+```
+
+After pushing, fill in the actual credential values on the target instance.
+
+### `credential map [<file>]`
+
+Match credentials that already exist on both instances by name and type, and write the mapping to `n8n-cli.mapping.json`. No stubs are created.
+
+```bash
+n8n-cli credential map --env client-a
+```
+
+Use this when credentials already exist on both instances and you just need to link the IDs.
 
 ---
 
@@ -245,49 +312,6 @@ n8n-cli data-table push --all --env client-a
 
 ---
 
-## Credential commands
-
-Credential metadata is stored in `n8n/credentials.json` as a flat list. Credential values and secrets are **never** fetched or stored. Only `id`, `name`, and `type` are saved.
-
-```json
-[
-  { "id": "src-cred-abc", "name": "Postgres Production", "type": "postgres" },
-  { "id": "src-cred-def", "name": "Slack Bot",           "type": "slackApi" }
-]
-```
-
-### `credential pull`
-
-Fetch all credentials from the instance and save metadata to `n8n/credentials.json`.
-
-```bash
-n8n-cli credential pull
-n8n-cli credential pull --env staging
-```
-
-### `credential push`
-
-Create empty credential stubs on a target instance for each entry in `credentials.json`. Updates `n8n-cli.mapping.json` with the source->target ID mapping. Already-mapped credentials are skipped.
-
-```bash
-n8n-cli credential push --env client-a
-n8n-cli credential push path/to/credentials.json --env client-a
-```
-
-After pushing, fill in the actual credential values on the target instance.
-
-### `credential map`
-
-Match credentials that already exist on both instances by name and type, and write the mapping to `n8n-cli.mapping.json`. No stubs are created.
-
-```bash
-n8n-cli credential map --env client-a
-```
-
-Use this when credentials already exist on both instances and you just need to link the IDs.
-
----
-
 ## Credential mapping
 
 Workflow JSON files contain credential IDs that are instance-specific. When pushing the same workflow to different environments, those IDs must be remapped.
@@ -304,11 +328,7 @@ Create `n8n/n8n-cli.mapping.json` and commit it (it contains only IDs, no secret
 }
 ```
 
-Find credential IDs on an instance:
-
-```bash
-n8n-cli credential list --json
-```
+The mapping is built using the credential commands above. Use `credential map` if the credentials already exist on the target, or `credential push` to create stubs and populate the mapping in one step.
 
 Credential remapping runs on every `workflow push`. Missing mappings print a warning but the push continues.
 
@@ -321,7 +341,7 @@ Tags are matched by name on the target; missing tags are created.
 See [docs/github-actions.md](./docs/github-actions.md) for a full guide including:
 - Recommended repo structure
 - Setting up GitHub Secrets
-- CI workflow (validate on pull request)
+- CI workflow (validate + diff on pull request)
 - CD workflow (deploy on merge to main)
 - Multi-client deployment with GitHub Environments
 - Credential mapping setup

@@ -5,8 +5,9 @@ import path from 'path';
 
 import { parseCustomFlags, loadEnvFile, buildEnv, deriveEnvName } from '../lib/env.js';
 import { runCli } from '../lib/run.js';
-import { readManifest, writeManifest } from '../lib/manifest.js';
+import { readManifest, writeManifest, getSection } from '../lib/manifest.js';
 import { readMapping } from '../lib/mapping.js';
+import { diffWorkflows, formatDiff } from '../lib/diff.js';
 import {
   DEFAULT_WORKFLOWS_DIR,
   pushWorkflow,
@@ -91,6 +92,21 @@ const WORKFLOW_HELP = {
     'DESCRIPTION',
     '  Checks that the file is valid JSON and contains the required n8n',
     '  workflow fields (name, nodes, connections). Exits 1 on failure.',
+  ],
+  diff: [
+    'Compare a local workflow file against the remote version',
+    '',
+    'USAGE',
+    '  $ n8n-cli workflow diff <file> [--env <name>]',
+    '',
+    'FLAGS',
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Fetches the remote workflow and compares it to the local file.',
+    '  Shows added/removed/changed nodes, connection changes and metadata.',
+    '  Exits 1 if differences are found, 0 if up to date.',
   ],
 };
 
@@ -221,7 +237,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     'All standard n8n-cli commands pass through unchanged.\n' +
     '\n' +
     'ADDED COMMANDS\n' +
-    `  workflow pull/push/validate   Manage workflows with CI/CD support\n` +
+    `  workflow pull/push/validate/diff   Manage workflows with CI/CD support\n` +
     `  variable pull/push            Sync instance variables\n` +
     `  data-table pull/push          Sync data tables\n` +
     `  credential pull/push/map      Manage credential metadata and ID mapping\n` +
@@ -242,7 +258,8 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
     `  workflow pull --all      Pull all workflows to ./${DEFAULT_WORKFLOWS_DIR}\n` +
     `  workflow push <file>     Push a workflow file (create or update)\n` +
     `  workflow push --all      Push all workflows from ./${DEFAULT_WORKFLOWS_DIR}\n` +
-    `  workflow validate <file> Validate a workflow JSON file\n`,
+    `  workflow validate <file> Validate a workflow JSON file\n` +
+    `  workflow diff <file>     Compare local file against remote version\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -350,6 +367,36 @@ if (args[0] === 'workflow' && args[1] === 'validate') {
   if (errors.length) { errors.forEach(e => console.error(`✗ ${e}`)); process.exit(1); }
   console.log(`✓ ${file} is valid`);
   process.exit(0);
+}
+
+// workflow diff <file>
+if (args[0] === 'workflow' && args[1] === 'diff') {
+  const file = args[2];
+  if (!file) { console.error('Usage: n8n-cli workflow diff <file>'); process.exit(1); }
+
+  let local;
+  try { local = JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch (e) { console.error(`Error reading ${file}: ${e.message}`); process.exit(1); }
+
+  const filename = path.basename(file);
+  const manifest = readManifest();
+  const remoteId = getSection(manifest, currentEnvName, 'workflows')[filename];
+
+  if (!remoteId) {
+    console.log(`${filename} has not been pushed to env: ${currentEnvName}`);
+    process.exit(0);
+  }
+
+  const fetched = runCli(['workflow', 'get', String(remoteId), '--json'], env);
+  if (fetched.status !== 0) { process.stderr.write(fetched.stderr); process.exit(1); }
+
+  let remote;
+  try { remote = JSON.parse(fetched.stdout.toString()); }
+  catch (e) { console.error(`Error parsing remote workflow: ${e.message}`); process.exit(1); }
+
+  const diff = diffWorkflows(local, remote);
+  process.stdout.write(formatDiff(diff, filename, currentEnvName));
+  process.exit(Object.keys(diff).length > 0 ? 1 : 0);
 }
 
 // variable --help

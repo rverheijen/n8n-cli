@@ -30,6 +30,12 @@ npm uninstall -g n8n-cli
 | `workflow push --all` | Push all workflows in the source directory |
 | `workflow validate <file>` | Validate a workflow JSON file |
 | `workflow diff <file>` | Compare a local file against the remote version |
+| `workflow diff --all` | Compare all local files against remote |
+| `workflow activate <file\|id>` | Activate a workflow (accepts filename or raw ID) |
+| `workflow activate --all` | Activate all workflows in the manifest |
+| `workflow deactivate <file\|id>` | Deactivate a workflow |
+| `workflow deactivate --all` | Deactivate all workflows in the manifest |
+| `workflow test <file>` | Trigger a workflow webhook and report the result |
 | `variable pull` | Fetch all variables |
 | `variable push [<file>]` | Push variables (create or update) |
 | `data-table pull <name>` | Fetch a data table by name |
@@ -39,6 +45,8 @@ npm uninstall -g n8n-cli
 | `credential pull` | Fetch credential metadata (no secrets) |
 | `credential push [<file>]` | Create credential stubs on target and update mapping |
 | `credential map [<file>]` | Match credentials by name and type, update mapping |
+| `execution list` | List executions (`--workflow` accepts a filename) |
+| `execution get <id>` | Get details for a single execution |
 
 ---
 
@@ -155,6 +163,70 @@ Example output:
   + connection: HTTP Request -> Set
   - connection: Webhook -> Slack
 ```
+
+### `workflow activate <file|id>` / `workflow deactivate <file|id>`
+
+Activate or deactivate a workflow. Accepts a local filename (resolved to a remote ID via the manifest or the `id` field in the JSON) or a raw workflow ID.
+
+```bash
+n8n-cli workflow activate n8n/workflows/1234.json
+n8n-cli workflow deactivate n8n/workflows/1234.json --env staging
+n8n-cli workflow activate VCAF23eWI9yFfp1X          # raw ID
+```
+
+Use `--all` to activate or deactivate every workflow in the manifest for the current environment:
+
+```bash
+n8n-cli workflow activate --all
+n8n-cli workflow activate --all --env staging
+n8n-cli workflow deactivate --all --env staging
+```
+
+This is most useful as the final step in a deploy pipeline — push first, then activate.
+
+### `workflow test <file>`
+
+Trigger a workflow via its webhook and report the HTTP result. Reads the local file to find webhook trigger nodes, constructs the URL, sends the request, and exits `1` if any request returns 4xx/5xx or fails to connect.
+
+```bash
+n8n-cli workflow test n8n/workflows/1234.json
+n8n-cli workflow test n8n/workflows/1234.json --data '{"key":"value"}'
+n8n-cli workflow test n8n/workflows/1234.json --prod
+n8n-cli workflow test n8n/workflows/1234.json --env staging
+```
+
+By default, the test webhook URL is used (`/webhook-test/<path>`). Pass `--prod` to use the production URL (`/webhook/<path>`).
+
+| Flag | Description |
+|---|---|
+| `--prod` | Use the production webhook URL instead of the test URL |
+| `--data <json>` | JSON body to send. For GET webhooks, sent as query params. |
+| `--query <json>` | Query params (use instead of `--data` for GET webhooks) |
+
+If the workflow uses a Chat Trigger, Form Trigger, or has no webhook at all, the command exits `0` with an informational message.
+
+---
+
+## Execution commands
+
+Execution commands pass through to the official `@n8n/cli` with one enhancement: `--workflow` accepts a local filename and resolves it to the remote ID via the manifest.
+
+### `execution list`
+
+```bash
+n8n-cli execution list
+n8n-cli execution list --workflow n8n/workflows/1234.json --status error
+n8n-cli execution list --workflow n8n/workflows/1234.json --limit 20 --json
+```
+
+### `execution get <id>`
+
+```bash
+n8n-cli execution get 5678
+n8n-cli execution get 5678 --includeData --json
+```
+
+All other `execution` subcommands (`delete`, `retry`, `stop`) pass through unchanged.
 
 ---
 

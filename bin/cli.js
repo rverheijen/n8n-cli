@@ -13,7 +13,10 @@ import {
   pushWorkflow,
   pullWorkflow,
   pullAllWorkflows,
+  activateWorkflow,
+  deactivateWorkflow,
 } from '../lib/workflow.js';
+import { testWorkflow } from '../lib/test.js';
 import {
   DEFAULT_VARIABLES_FILE,
   pullVariables,
@@ -53,6 +56,40 @@ const workflowsDir    = dir ?? DEFAULT_WORKFLOWS_DIR;
 const tablesDir       = dir ?? DEFAULT_DATA_TABLES_DIR;
 const variablesFile   = dir ?? DEFAULT_VARIABLES_FILE;
 const credentialsFile = dir ?? DEFAULT_CREDENTIALS_FILE;
+
+// --- Helpers ---
+
+function resolveWorkflowId(fileOrId, manifest, envName) {
+  if (fileOrId.endsWith('.json') || fileOrId.includes('/')) {
+    const filename = path.basename(fileOrId);
+    const remoteId = getSection(manifest, envName, 'workflows')[filename];
+    if (remoteId) return String(remoteId);
+    try {
+      const local = JSON.parse(fs.readFileSync(fileOrId, 'utf8'));
+      if (local.id) return String(local.id);
+    } catch {}
+    return null;
+  }
+  return fileOrId;
+}
+
+function translateWorkflowFlag(cliArgs, manifest, envName) {
+  const result = [...cliArgs];
+  for (let i = 0; i < result.length; i++) {
+    if (result[i] === '--workflow' && result[i + 1]) {
+      const resolved = resolveWorkflowId(result[i + 1], manifest, envName);
+      if (resolved) result[i + 1] = resolved;
+      break;
+    }
+    if (result[i].startsWith('--workflow=')) {
+      const val      = result[i].slice('--workflow='.length);
+      const resolved = resolveWorkflowId(val, manifest, envName);
+      if (resolved) result[i] = `--workflow=${resolved}`;
+      break;
+    }
+  }
+  return result;
+}
 
 // --- Help text for custom commands ---
 
@@ -98,8 +135,10 @@ const WORKFLOW_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli workflow diff <file> [--env <name>]',
+    '  $ n8n-cli workflow diff --all   [--env <name>]',
     '',
     'FLAGS',
+    '  --all              Diff all local workflows against remote',
     '  --env <name>       Environment name',
     '  --env-file <path>  Load a specific .env file',
     '',
@@ -107,6 +146,58 @@ const WORKFLOW_HELP = {
     '  Fetches the remote workflow and compares it to the local file.',
     '  Shows added/removed/changed nodes, connection changes and metadata.',
     '  Exits 1 if differences are found, 0 if up to date.',
+  ],
+  activate: [
+    'Activate (publish) a workflow',
+    '',
+    'USAGE',
+    '  $ n8n-cli workflow activate <file|id> [--env <name>]',
+    '  $ n8n-cli workflow activate --all     [--env <name>]',
+    '',
+    'FLAGS',
+    '  --all              Activate all workflows in the manifest',
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Accepts a local filename (resolves to remote ID via manifest or id field)',
+    '  or a raw workflow ID. Use --all to activate every workflow in the manifest',
+    '  for the current environment — useful as the final step of a deploy.',
+  ],
+  deactivate: [
+    'Deactivate a workflow',
+    '',
+    'USAGE',
+    '  $ n8n-cli workflow deactivate <file|id> [--env <name>]',
+    '  $ n8n-cli workflow deactivate --all     [--env <name>]',
+    '',
+    'FLAGS',
+    '  --all              Deactivate all workflows in the manifest',
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+  ],
+  test: [
+    'Trigger a workflow via its webhook and report the result',
+    '',
+    'USAGE',
+    '  $ n8n-cli workflow test <file> [--prod] [--data <json>] [--query <json>]',
+    '',
+    'FLAGS',
+    '  --prod             Call the production webhook URL (default: test URL)',
+    '  --data <json>      JSON body to send (for GET webhooks sent as query params)',
+    '  --query <json>     Query parameters to send explicitly',
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Reads the workflow file, finds webhook trigger nodes, and sends an HTTP',
+    '  request to each one. Exits 1 if any request returns 4xx/5xx or fails to',
+    '  connect. Exits 0 on success or when the trigger is not a webhook.',
+    '',
+    'EXAMPLES',
+    '  $ n8n-cli workflow test n8n/workflows/1234.json',
+    `  $ n8n-cli workflow test n8n/workflows/1234.json --data '{"key":"value"}'`,
+    '  $ n8n-cli workflow test n8n/workflows/1234.json --prod',
   ],
 };
 
@@ -238,9 +329,12 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     '\n' +
     'ADDED COMMANDS\n' +
     `  workflow pull/push/validate/diff   Manage workflows with CI/CD support\n` +
-    `  variable pull/push            Sync instance variables\n` +
-    `  data-table pull/push          Sync data tables\n` +
-    `  credential pull/push/map      Manage credential metadata and ID mapping\n` +
+    `  workflow activate/deactivate       Toggle workflow active state (accepts file or ID)\n` +
+    `  workflow test                      Trigger a workflow webhook and report the result\n` +
+    `  variable pull/push                 Sync instance variables\n` +
+    `  data-table pull/push               Sync data tables\n` +
+    `  credential pull/push/map           Manage credential metadata and ID mapping\n` +
+    `  execution list/get                 List or inspect executions (--workflow accepts filename)\n` +
     '\n',
   );
   const result = runCli(args.length === 0 ? ['--help'] : args, env);
@@ -254,17 +348,23 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  workflow pull <id>       Fetch a workflow by ID and save to <id>.json\n` +
-    `  workflow pull --all      Pull all workflows to ./${DEFAULT_WORKFLOWS_DIR}\n` +
-    `  workflow push <file>     Push a workflow file (create or update)\n` +
-    `  workflow push --all      Push all workflows from ./${DEFAULT_WORKFLOWS_DIR}\n` +
-    `  workflow validate <file> Validate a workflow JSON file\n` +
-    `  workflow diff <file>     Compare local file against remote version\n`,
+    `  workflow pull <id>            Fetch a workflow by ID and save to <id>.json\n` +
+    `  workflow pull --all           Pull all workflows to ./${DEFAULT_WORKFLOWS_DIR}\n` +
+    `  workflow push <file>          Push a workflow file (create or update)\n` +
+    `  workflow push --all           Push all workflows from ./${DEFAULT_WORKFLOWS_DIR}\n` +
+    `  workflow validate <file>      Validate a workflow JSON file\n` +
+    `  workflow diff <file>          Compare local file against remote version\n` +
+    `  workflow diff --all           Diff all local workflows against remote\n` +
+    `  workflow activate <file|id>   Activate a workflow\n` +
+    `  workflow activate --all       Activate all workflows in the manifest\n` +
+    `  workflow deactivate <file|id> Deactivate a workflow\n` +
+    `  workflow deactivate --all     Deactivate all workflows in the manifest\n` +
+    `  workflow test <file>          Trigger webhook and report result\n`,
   );
   process.exit(result.status ?? 0);
 }
 
-// workflow pull/push/validate --help
+// workflow pull/push/validate/diff/activate/deactivate/test --help
 if (args[0] === 'workflow' && WORKFLOW_HELP[args[1]] &&
     (args.includes('--help') || args.includes('-h'))) {
   console.log(WORKFLOW_HELP[args[1]].join('\n'));
@@ -283,6 +383,84 @@ if (args[0] === 'data-table' && DATA_TABLE_HELP[args[1]] &&
     (args.includes('--help') || args.includes('-h'))) {
   console.log(DATA_TABLE_HELP[args[1]].join('\n'));
   process.exit(0);
+}
+
+// workflow activate --all
+if (args[0] === 'workflow' && args[1] === 'activate' && all) {
+  const manifest  = readManifest();
+  const workflows = getSection(manifest, currentEnvName, 'workflows');
+  const entries   = Object.entries(workflows);
+  if (entries.length === 0) {
+    console.log(`No workflows in manifest for env: ${currentEnvName}`);
+    process.exit(0);
+  }
+  console.log(`Activating ${entries.length} workflow(s) in env: ${currentEnvName}\n`);
+  let ok = 0, failed = 0;
+  for (const [filename, remoteId] of entries) {
+    if (activateWorkflow(String(remoteId), env)) {
+      console.log(`Activated  ${filename} (${remoteId})`);
+      ok++;
+    } else {
+      console.error(`Failed     ${filename} (${remoteId})`);
+      failed++;
+    }
+  }
+  console.log(`\n${ok} activated${failed > 0 ? `, ${failed} failed` : ''}`);
+  process.exit(failed > 0 ? 1 : 0);
+}
+
+// workflow activate <file|id>
+if (args[0] === 'workflow' && args[1] === 'activate') {
+  const target = args[2];
+  if (!target) {
+    console.error('Usage: n8n-cli workflow activate <file|id>\n       n8n-cli workflow activate --all');
+    process.exit(1);
+  }
+  const remoteId = resolveWorkflowId(target, readManifest(), currentEnvName);
+  if (!remoteId) {
+    console.error(`Could not resolve remote ID for: ${target}`);
+    process.exit(1);
+  }
+  process.exit(activateWorkflow(remoteId, env) ? 0 : 1);
+}
+
+// workflow deactivate --all
+if (args[0] === 'workflow' && args[1] === 'deactivate' && all) {
+  const manifest  = readManifest();
+  const workflows = getSection(manifest, currentEnvName, 'workflows');
+  const entries   = Object.entries(workflows);
+  if (entries.length === 0) {
+    console.log(`No workflows in manifest for env: ${currentEnvName}`);
+    process.exit(0);
+  }
+  console.log(`Deactivating ${entries.length} workflow(s) in env: ${currentEnvName}\n`);
+  let ok = 0, failed = 0;
+  for (const [filename, remoteId] of entries) {
+    if (deactivateWorkflow(String(remoteId), env)) {
+      console.log(`Deactivated  ${filename} (${remoteId})`);
+      ok++;
+    } else {
+      console.error(`Failed       ${filename} (${remoteId})`);
+      failed++;
+    }
+  }
+  console.log(`\n${ok} deactivated${failed > 0 ? `, ${failed} failed` : ''}`);
+  process.exit(failed > 0 ? 1 : 0);
+}
+
+// workflow deactivate <file|id>
+if (args[0] === 'workflow' && args[1] === 'deactivate') {
+  const target = args[2];
+  if (!target) {
+    console.error('Usage: n8n-cli workflow deactivate <file|id>\n       n8n-cli workflow deactivate --all');
+    process.exit(1);
+  }
+  const remoteId = resolveWorkflowId(target, readManifest(), currentEnvName);
+  if (!remoteId) {
+    console.error(`Could not resolve remote ID for: ${target}`);
+    process.exit(1);
+  }
+  process.exit(deactivateWorkflow(remoteId, env) ? 0 : 1);
 }
 
 // workflow pull --all
@@ -369,6 +547,50 @@ if (args[0] === 'workflow' && args[1] === 'validate') {
   process.exit(0);
 }
 
+// workflow diff --all
+if (args[0] === 'workflow' && args[1] === 'diff' && all) {
+  const files = fs.existsSync(workflowsDir)
+    ? fs.readdirSync(workflowsDir).filter(f => f.endsWith('.json'))
+    : [];
+
+  if (files.length === 0) {
+    console.log(`No .json files found in ${workflowsDir}`);
+    process.exit(0);
+  }
+
+  const manifest = readManifest();
+  let hasChanges = false;
+
+  for (const filename of files) {
+    const filepath = path.join(workflowsDir, filename);
+    let local;
+    try { local = JSON.parse(fs.readFileSync(filepath, 'utf8')); }
+    catch (e) { console.error(`Error reading ${filepath}: ${e.message}`); continue; }
+
+    const remoteId = getSection(manifest, currentEnvName, 'workflows')[filename] ?? local.id;
+    if (!remoteId) {
+      console.log(`${filename}: no remote ID (not yet pushed)`);
+      continue;
+    }
+
+    const fetched = runCli(['workflow', 'get', String(remoteId), '--json'], env);
+    if (fetched.status !== 0) {
+      console.error(`${filename}: failed to fetch remote (id: ${remoteId})`);
+      continue;
+    }
+
+    let remote;
+    try { remote = JSON.parse(fetched.stdout.toString()); }
+    catch (e) { console.error(`${filename}: could not parse remote response`); continue; }
+
+    const diff = diffWorkflows(local, remote);
+    process.stdout.write(formatDiff(diff, filename, currentEnvName));
+    if (Object.keys(diff).length > 0) hasChanges = true;
+  }
+
+  process.exit(hasChanges ? 1 : 0);
+}
+
 // workflow diff <file>
 if (args[0] === 'workflow' && args[1] === 'diff') {
   const file = args[2];
@@ -397,6 +619,58 @@ if (args[0] === 'workflow' && args[1] === 'diff') {
   const diff = diffWorkflows(local, remote);
   process.stdout.write(formatDiff(diff, filename, currentEnvName));
   process.exit(Object.keys(diff).length > 0 ? 1 : 0);
+}
+
+// workflow test <file>
+if (args[0] === 'workflow' && args[1] === 'test') {
+  const file = args[2];
+  if (!file || file.startsWith('--')) {
+    console.error('Usage: n8n-cli workflow test <file> [--prod] [--data <json>] [--query <json>]');
+    process.exit(1);
+  }
+
+  let prod = false, dataJson = null, queryJson = null;
+  for (let i = 3; i < args.length; i++) {
+    if (args[i] === '--prod') { prod = true; }
+    else if (args[i] === '--data'  && args[i + 1]) { dataJson  = args[++i]; }
+    else if (args[i].startsWith('--data='))         { dataJson  = args[i].slice(7); }
+    else if (args[i] === '--query' && args[i + 1])  { queryJson = args[++i]; }
+    else if (args[i].startsWith('--query='))        { queryJson = args[i].slice(8); }
+  }
+
+  let workflow;
+  try { workflow = JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch (e) { console.error(`Error reading ${file}: ${e.message}`); process.exit(1); }
+
+  const baseUrl = env.N8N_URL;
+  if (!baseUrl) { console.error('Error: N8N_URL or N8N_API_URL is not set'); process.exit(1); }
+
+  const filename = path.basename(file);
+  const mode = prod ? 'production' : 'test';
+  console.log(`Testing ${filename} (${mode} webhook, env: ${currentEnvName})\n`);
+
+  const results = await testWorkflow(workflow, baseUrl, { prod, data: dataJson, query: queryJson });
+
+  let exitCode = 0;
+  for (const r of results) {
+    if (r.skipped) {
+      console.log(`  ${r.reason}`);
+    } else if (r.error) {
+      console.error(`  ✗ ${r.node}: connection error — ${r.error}`);
+      exitCode = 1;
+    } else {
+      const ok     = r.status >= 200 && r.status < 400;
+      const symbol = ok ? '✓' : '✗';
+      console.log(`  ${symbol} ${r.node}: ${r.method} ${r.url} → HTTP ${r.status}`);
+      if (!ok) {
+        const preview = r.body?.slice(0, 300).replace(/\n/g, ' ');
+        if (preview) console.log(`    ${preview}`);
+        exitCode = 1;
+      }
+    }
+  }
+
+  process.exit(exitCode);
 }
 
 // variable --help
@@ -544,6 +818,25 @@ if (args[0] === 'credential' && args[1] === 'map') {
   if (!result) process.exit(1);
   console.log(`\n${result.matched} matched, ${result.unmatched} unmatched`);
   process.exit(0);
+}
+
+// execution --help: add note about --workflow accepting filenames
+if (args[0] === 'execution' && (args[1] === '--help' || args[1] === '-h')) {
+  const result = runCli(args, env);
+  process.stdout.write(result.stdout);
+  process.stdout.write(
+    'NOTE\n' +
+    '  --workflow accepts a local filename (e.g. n8n/workflows/1234.json)\n' +
+    '  and resolves it to the remote workflow ID via the manifest.\n',
+  );
+  process.exit(result.status ?? 0);
+}
+
+// execution list: translate --workflow <file> to remote ID before passing through
+if (args[0] === 'execution' && args[1] === 'list') {
+  const translated = translateWorkflowFlag(args, readManifest(), currentEnvName);
+  const result = runCli(translated, env, { stdio: 'inherit' });
+  process.exit(result.status ?? 0);
 }
 
 // Default: pass all arguments straight through to the real CLI

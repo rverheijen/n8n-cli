@@ -214,6 +214,24 @@ const CREDENTIAL_HELP = {
 
 // --- Command routing ---
 
+// top-level --help / -h / no args
+if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
+  process.stdout.write(
+    'This is a custom wrapper around the official @n8n/cli.\n' +
+    'All standard n8n-cli commands pass through unchanged.\n' +
+    '\n' +
+    'ADDED COMMANDS\n' +
+    `  workflow pull/push/validate   Manage workflows with CI/CD support\n` +
+    `  variable pull/push            Sync instance variables\n` +
+    `  data-table pull/push          Sync data tables\n` +
+    `  credential pull/push/map      Manage credential metadata and ID mapping\n` +
+    '\n',
+  );
+  const result = runCli(args.length === 0 ? ['--help'] : args, env);
+  process.stdout.write(result.stdout);
+  process.exit(result.status ?? 0);
+}
+
 // workflow --help / -h
 if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
   const result = runCli(args, env);

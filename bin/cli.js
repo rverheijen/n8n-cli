@@ -189,9 +189,9 @@ const CREDENTIAL_HELP = {
     '',
     'DESCRIPTION',
     '  Creates an empty credential stub on the target for each entry in',
-    '  credentials.json (or <file> if given). Automatically updates',
-    '  n8n-cli.mapping.json with the source→target ID mapping.',
-    '  Already-mapped credentials are skipped.',
+    '  credentials.json (or <file> if given). Updates n8n-cli.mapping.json',
+    '  with the source->target ID mapping. Already-mapped credentials',
+    '  are skipped.',
     '  After pushing, fill in the credential values on the target instance.',
   ],
   map: [
@@ -295,7 +295,7 @@ if (args[0] === 'workflow' && args[1] === 'push' && all) {
   }
 
   writeManifest(manifest);
-  console.log(`\nDone — ${pushed} pushed${failed > 0 ? `, ${failed} failed` : ''} to env: ${currentEnvName}`);
+  console.log(`\n${pushed} pushed${failed > 0 ? `, ${failed} failed` : ''} to env: ${currentEnvName}`);
   process.exit(failed > 0 ? 1 : 0);
 }
 
@@ -363,7 +363,7 @@ if (args[0] === 'variable' && args[1] === 'push') {
   const variables = readVariablesFile(filepath);
   console.log(`Pushing ${variables.length} variable(s) to env: ${currentEnvName}\n`);
   const { created, updated, failed } = pushVariables(variables, env);
-  console.log(`\nDone — ${created} created, ${updated} updated${failed > 0 ? `, ${failed} failed` : ''}`);
+  console.log(`\n${created} created, ${updated} updated${failed > 0 ? `, ${failed} failed` : ''}`);
   process.exit(failed > 0 ? 1 : 0);
 }
 
@@ -466,7 +466,7 @@ if (args[0] === 'credential' && args[1] === 'push') {
   const credentials = readCredentialsFile(filepath);
   console.log(`Pushing ${credentials.length} credential(s) to env: ${currentEnvName}\n`);
   const { created, skipped, failed } = pushCredentials(credentials, currentEnvName, env);
-  console.log(`\nDone — ${created} created, ${skipped} skipped${failed > 0 ? `, ${failed} failed` : ''}`);
+  console.log(`\n${created} created, ${skipped} skipped${failed > 0 ? `, ${failed} failed` : ''}`);
   process.exit(failed > 0 ? 1 : 0);
 }
 
@@ -477,7 +477,7 @@ if (args[0] === 'credential' && args[1] === 'map') {
   console.log(`Matching ${credentials.length} credential(s) against env: ${currentEnvName}\n`);
   const result = mapCredentials(credentials, currentEnvName, env);
   if (!result) process.exit(1);
-  console.log(`\nDone — ${result.matched} mapped, ${result.unmatched} unmatched`);
+  console.log(`\n${result.matched} matched, ${result.unmatched} unmatched`);
   process.exit(0);
 }
 

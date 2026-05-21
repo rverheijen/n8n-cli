@@ -31,7 +31,7 @@ npm uninstall -g n8n-cli
 
 ### .env files
 
-The wrapper automatically loads `.env` from the current directory if it exists. Shell environment variables always take precedence over `.env` values.
+The wrapper loads `.env` from the current directory if it exists. Shell environment variables take precedence over `.env` values.
 
 ```bash
 # .env
@@ -46,7 +46,7 @@ n8n-cli workflow push --all --env-file .env.staging
 n8n-cli workflow push --all --env client-a        # loads .env.client-a if present
 ```
 
-In CI (e.g. GitHub Actions), set `N8N_API_URL` and `N8N_API_KEY` as environment variables or secrets directly — no `.env` file needed.
+In CI (e.g. GitHub Actions), set `N8N_API_URL` and `N8N_API_KEY` as environment variables or secrets directly; no `.env` file needed.
 
 ---
 
@@ -103,7 +103,7 @@ n8n-cli workflow push --all --env client-a
 
 ### `workflow validate <file>`
 
-Validate a workflow JSON file. Checks for required fields (`name`, `nodes`, `connections`). Exits `1` on failure — useful as a CI gate on pull requests.
+Validate a workflow JSON file. Checks for required fields (`name`, `nodes`, `connections`). Exits `1` on failure, useful as a CI gate on pull requests.
 
 ```bash
 n8n-cli workflow validate n8n/workflows/1234.json
@@ -201,7 +201,7 @@ n8n-cli data-table push --all --env client-a
 
 ## Deployment manifest
 
-`n8n/n8n-cli.manifest.json` tracks the remote workflow and data table IDs per environment so that subsequent pushes update existing resources instead of creating duplicates.
+`n8n/n8n-cli.manifest.json` tracks remote workflow and data table IDs per environment. Without it every push would create a new resource instead of updating the existing one.
 
 ```json
 {
@@ -216,13 +216,13 @@ n8n-cli data-table push --all --env client-a
 }
 ```
 
-**Commit this file to git.** It is automatically updated on every `push` command.
+**Commit this file to git.** It gets updated on every `push` command.
 
 ---
 
 ## Credential commands
 
-Credential metadata is stored in `n8n/credentials.json` as a flat list. Credential values and secrets are **never** fetched or stored — only `id`, `name`, and `type`.
+Credential metadata is stored in `n8n/credentials.json` as a flat list. Credential values and secrets are **never** fetched or stored. Only `id`, `name`, and `type` are saved.
 
 ```json
 [
@@ -242,7 +242,7 @@ n8n-cli credential pull --env staging
 
 ### `credential push`
 
-Create empty credential stubs on a target instance for each entry in `credentials.json`. Automatically updates `n8n-cli.mapping.json` with the source→target ID mapping. Already-mapped credentials are skipped.
+Create empty credential stubs on a target instance for each entry in `credentials.json`. Updates `n8n-cli.mapping.json` with the source->target ID mapping. Already-mapped credentials are skipped.
 
 ```bash
 n8n-cli credential push --env client-a
@@ -259,7 +259,7 @@ Match credentials that already exist on both instances by name and type, and wri
 n8n-cli credential map --env client-a
 ```
 
-Use this when credentials already exist on both instances and you only need to establish the ID mapping.
+Use this when credentials already exist on both instances and you just need to link the IDs.
 
 ---
 
@@ -285,9 +285,9 @@ Find credential IDs on an instance:
 n8n-cli credential list --json
 ```
 
-Credential remapping is applied automatically on every `workflow push`. Missing mappings produce a warning but do not fail the deployment.
+Credential remapping runs on every `workflow push`. Missing mappings print a warning but the push continues.
 
-Tags are resolved automatically by name — if a tag doesn't exist on the target instance it is created.
+Tags are matched by name on the target; missing tags are created.
 
 ---
 

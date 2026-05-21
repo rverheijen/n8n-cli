@@ -1,6 +1,6 @@
 # GitHub Actions CI/CD Guide
 
-This guide explains how to use `n8n-cli` with GitHub Actions to automatically validate, deploy, and manage n8n workflows, variables, and data tables across one or multiple instances.
+This guide explains how to use `n8n-cli` with GitHub Actions to validate, deploy and manage n8n workflows, variables, and data tables across one or more instances.
 
 ---
 
@@ -53,11 +53,11 @@ your-project/
 
 **Commit to git:**
 - All files under `n8n/` except `.env*` files
-- `n8n-cli.manifest.json` — tracks remote IDs so subsequent deployments update instead of duplicate
-- `n8n-cli.mapping.json` — contains only credential IDs, no secrets
+- `n8n-cli.manifest.json`: tracks remote IDs so subsequent deployments update instead of duplicate
+- `n8n-cli.mapping.json`: contains only credential IDs, no secrets
 
 **Never commit:**
-- `.env`, `.env.*` — contain API keys
+- `.env`, `.env.*`: contain API keys
 
 ---
 
@@ -71,7 +71,7 @@ Add `n8n-cli` as a dev dependency so GitHub Actions can install it via `npm ci`:
 npm install --save-dev github:yourusername/n8n-cli
 ```
 
-Or install it globally in each workflow step — see the workflow examples below.
+Or install it globally in each workflow step (see the workflow examples below).
 
 ### 2. Enable write permissions for the manifest commit
 
@@ -96,7 +96,7 @@ Go to **Settings → Secrets and variables → Actions** and add:
 
 ### Multiple client instances
 
-Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) — one environment per client (**Settings → Environments**), each with `N8N_API_URL` and `N8N_API_KEY` as environment secrets. This gives you deployment protection rules and approval gates per client.
+Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment), one per client (**Settings → Environments**), each with its own `N8N_API_URL` and `N8N_API_KEY` secrets. You get deployment protection rules and approval gates per client.
 
 ---
 
@@ -104,11 +104,11 @@ Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targetin
 
 Workflow JSON files contain credential IDs that are instance-specific. When pushing the same workflow to different environments, those IDs need to be remapped.
 
-`n8n-cli` provides three commands to set up and maintain `n8n-cli.mapping.json` — choose based on whether the credentials already exist on the target:
+`n8n-cli` provides three commands to set up and maintain `n8n-cli.mapping.json`. Pick one based on whether the credentials already exist on the target:
 
-### Option A — Credentials already exist on both instances
+### Option A: Credentials already exist on both instances
 
-Use `credential map` to match by name and type automatically:
+Use `credential map` to match by name and type:
 
 ```bash
 # Pull credential metadata from the source instance first
@@ -119,7 +119,7 @@ n8n-cli credential map --env client-a
 n8n-cli credential map --env client-b
 ```
 
-### Option B — Credentials don't exist on the target yet
+### Option B: Credentials don't exist on the target yet
 
 Use `credential push` to create empty stubs and auto-populate the mapping:
 
@@ -134,7 +134,7 @@ n8n-cli credential push --env client-b
 
 Then fill in the actual credential values on each target instance.
 
-### Option C — Manual mapping
+### Option C: Manual mapping
 
 Edit `n8n/n8n-cli.mapping.json` directly:
 
@@ -159,7 +159,7 @@ To find credential IDs on an instance:
 n8n-cli credential list --json --env-file .env.client-a
 ```
 
-The mapping is applied automatically on every `workflow push`. After applying the mapping, `n8n-cli` also validates that all credential IDs referenced in the workflow exist on the target instance — missing IDs produce a warning but do not fail the deployment.
+The mapping is applied on every `workflow push`. After remapping, `n8n-cli` checks that all credential IDs in the workflow exist on the target. Missing IDs print a warning but the push continues.
 
 ---
 
@@ -192,7 +192,7 @@ n8n-cli variable push --env client-a
 
 ## Data tables
 
-Each file in `n8n/data-tables/` defines one data table — its columns and seed rows:
+Each file in `n8n/data-tables/` defines one data table with its columns and seed rows:
 
 ```json
 {
@@ -229,7 +229,7 @@ n8n-cli data-table push --all
 
 ## Workflow files
 
-### CI — Validate on pull request
+### CI: Validate on pull request
 
 **`.github/workflows/ci.yml`**
 
@@ -269,7 +269,7 @@ jobs:
 
 ---
 
-### CD — Deploy to a single instance
+### CD: Deploy to a single instance
 
 **`.github/workflows/cd.yml`**
 
@@ -329,7 +329,7 @@ jobs:
 
 ---
 
-### CD — Deploy to multiple client instances
+### CD: Deploy to multiple client instances
 
 **`.github/workflows/cd-clients.yml`**
 
@@ -359,7 +359,7 @@ jobs:
     strategy:
       matrix:
         client: [client-a, client-b, client-c]
-      max-parallel: 1       # sequential — prevents manifest commit conflicts
+      max-parallel: 1       # sequential, prevents manifest commit conflicts
       fail-fast: false      # continue deploying remaining clients if one fails
     environment: ${{ matrix.client }}
     runs-on: ubuntu-latest
@@ -402,14 +402,14 @@ jobs:
           git push
 ```
 
-> **Why `max-parallel: 1`?** Each deploy job reads and writes the shared `n8n-cli.manifest.json`. Running jobs in parallel would cause git push conflicts on the manifest commit. Sequential execution ensures each job picks up the previous client's manifest entries.
+> **Why `max-parallel: 1`?** Each deploy job reads and writes the shared `n8n-cli.manifest.json`. Running them in parallel causes git push conflicts on the manifest commit. Running sequentially means each job picks up the manifest entries from the previous client.
 
 ---
 
 ## Local development workflow
 
 ```bash
-# Initial setup — pull everything from your instance
+# Initial setup: pull everything from your instance
 n8n-cli workflow pull --all
 n8n-cli variable pull
 n8n-cli data-table pull --all
@@ -425,7 +425,7 @@ n8n-cli variable push --env staging
 n8n-cli data-table push --all --env staging
 n8n-cli workflow push --all --env staging
 
-# Commit and push — GitHub Actions handles the rest
+# Commit and push; GitHub Actions handles the rest
 git add n8n/
 git commit -m "feat: update my-workflow"
 git push
@@ -461,7 +461,7 @@ n8n-cli data-table push --all --env-file .env.client-a
    ```
 6. Commit the updated `n8n-cli.manifest.json` and `n8n-cli.mapping.json`.
 
-From this point on, GitHub Actions handles all subsequent deployments automatically.
+From this point on, GitHub Actions handles deployments on every push to main.
 
 ---
 
@@ -471,10 +471,10 @@ From this point on, GitHub Actions handles all subsequent deployments automatica
 The manifest (`n8n/n8n-cli.manifest.json`) is either missing or doesn't have an entry for that environment. Run `workflow push` once locally with the correct `--env` flag to populate the manifest, then commit it.
 
 **Tags are missing after deployment**
-Tags are resolved by name on the target instance. If a tag doesn't exist it is created automatically. If you see this issue, check that the workflow JSON includes tag names (not just IDs) — workflows pulled via `workflow pull` always include both.
+Tags are resolved by name on the target. If a tag doesn't exist it gets created. If you see this issue, check that the workflow JSON includes tag names (not just IDs); workflows pulled via `workflow pull` always include both.
 
 **Credential warnings during workflow push**
-A warning means a credential ID in the workflow JSON has no mapping for the target environment. Add the mapping to `n8n/n8n-cli.mapping.json`. The workflow is still pushed — the credential reference will simply be incorrect until the mapping is added.
+A warning means a credential ID in the workflow JSON has no mapping for the target environment. Add the mapping to `n8n/n8n-cli.mapping.json`. The workflow is still pushed, but the credential reference will be incorrect until the mapping is added.
 
 **`Error: env file not found`**
 You used `--env-file .env.client-a` but the file doesn't exist. Either create the file or use `--env client-a` (which only requires the file if it exists, and falls back to shell env vars).
@@ -483,4 +483,4 @@ You used `--env-file .env.client-a` but the file doesn't exist. Either create th
 Check that **Workflow permissions** is set to **Read and write** in repository settings (Settings → Actions → General).
 
 **A client deployment failed mid-run**
-Because `fail-fast: false` is set, other clients continue deploying. The failed client's resources may be partially updated — check the job logs and re-run the failed job manually once the issue is resolved.
+Because `fail-fast: false` is set, other clients continue deploying. The failed client's resources may be partially updated. Check the job logs and re-run the failed job once the issue is resolved.

@@ -1,0 +1,1713 @@
+{
+  "updatedAt": "2026-05-21T15:05:15.388Z",
+  "createdAt": "2026-04-28T20:33:52.719Z",
+  "id": "VCAF23eWI9yFfp1X",
+  "name": "Viking | SAP to HubSpot Product Sync",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "9363a13f-6a3c-4f99-99e5-7356a68831b7",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "abb4cc4f-f2a2-422c-a15b-dad5d29a36d5",
+      "name": "Webhook",
+      "webhookId": "73c4ad5a-a351-4244-8674-73cee5c7fea8"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body",
+        "options": {}
+      },
+      "id": "63aa1ebb-11cd-4baa-a904-3c741fcb92c3",
+      "name": "Split Out by Products",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "id",
+              "value": "={{ $json.Material }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "idProperty",
+              "value": "hs_sku",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "properties",
+              "type": "object",
+              "value": "={{ { \"name\": $json[\"Manufacturer Part No.\"] || $json[\"Material\"], \"hs_sku\": $json[\"Material\"], \"description\": $json[\"Material Description\"], \"sap_created_by\": $json[\"Created By\"], \"sap_last_change\": $json[\"Last Change\"] ? new Date($json[\"Last Change\"].split(\"T\")[0]).getTime() : null, \"sap_changed_by\": $json[\"Changed By\"], \"sap_material_group\": $json[\"Material Group\"], \"sap_base_unit_of_measure\": $json[\"Base Unit of Measure\"], \"sap_net_weight\": $json[\"Gross Weight\"], \"sap_unit_of_weight\": $json[\"Unit of Weight\"], \"sap_cross_plant_material_status\": String($json[\"Cross-Plant Material Status\"]), \"sap_xdistribution_chain_status\": String($json[\"X-distr.chain status\"]), \"sap_manufacturer_part_number\": $json[\"Manufacturer Part No.\"], \"sap_manufacturer\": $json.Manufacturer } }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "477d2449-59b8-4de4-8294-58d54212083d",
+      "name": "Map SAP Properties to HubSpot Properties",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "3c588013-0c77-4c35-ae4f-34e362c6c2e8",
+      "name": "Respond 200 Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        -288
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 0.2
+      },
+      "id": "f6cacec5-5e4c-4af4-a21b-f68ec48f1591",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        -96
+      ],
+      "webhookId": "8cebd4ca-0992-4fcd-ba8b-ca75bc2a4bb4"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "inputs",
+        "options": {}
+      },
+      "id": "246173b7-f02b-42d6-8ba1-0fed3c11164d",
+      "name": "Assemble Payload",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputs = $input.first().json.inputs;\nconst cleaned = inputs.map(item => ({\n  ...item,\n  properties: Object.fromEntries(\n    Object.entries(item.properties).filter(([_, v]) => v !== null && v !== undefined && v !== '')\n  )\n}));\nreturn [{ json: { inputs: cleaned } }];"
+      },
+      "id": "c8a5b439-e305-4db0-a507-499ef8ce77fc",
+      "name": "Strip Null Properties",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/products/batch/upsert",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "61bf70dd-b3e8-4271-bf97-78de3f593ec6",
+      "name": "Upsert Products in HubSpot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        -80
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "maxTries": 3,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "9AfA8y6BZNuxD6hd",
+          "name": "Trengo"
+        },
+        "hubspotAppToken": {
+          "id": "llJei5LfGtLABNZF",
+          "name": "Viking | SAP to HubSpot Integration | Sandbox"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "batchSize": 100,
+        "options": {}
+      },
+      "id": "7f6dd6b6-edb7-41c7-bf5a-796f4b06409f",
+      "name": "Loop over Products",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": {
+          "error": "Body must be a non-empty array of SAP products"
+        },
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "22e9a8ff-6d35-4058-a0ea-e517c003a5d4",
+      "name": "Respond 400 Bad Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "38e46c38-032f-4452-bf1a-43fa1e15eb92",
+      "name": "Respond 400 Batch Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2016,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.message || $json.error || 'HubSpot upsert failed' }}"
+      },
+      "id": "af4d3817-2f97-470a-b6e0-8178eb4088ad",
+      "name": "Stop and Error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ Array.isArray($json.body) && $json.body.length > 0 }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dbc6f553-e4e0-4215-ad95-cf45a49ac235",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out by Products": {
+      "main": [
+        [
+          {
+            "node": "Map SAP Properties to HubSpot Properties",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map SAP Properties to HubSpot Properties": {
+      "main": [
+        [
+          {
+            "node": "Loop over Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Assemble Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Payload": {
+      "main": [
+        [
+          {
+            "node": "Strip Null Properties",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strip Null Properties": {
+      "main": [
+        [
+          {
+            "node": "Upsert Products in HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Products in HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Loop over Products",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 400 Batch Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop over Products": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 400 Batch Error": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Split Out by Products",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 400 Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "bonana-agents.app.n8n.cloud",
+            "user-agent": "python-requests/2.32.3",
+            "content-length": "21832",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "195.218.12.108",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "LU",
+            "cf-ray": "9f785651aae291fb-FRA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "195.218.12.108, 172.70.243.210",
+            "x-forwarded-host": "bonana-agents.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-77-684f686786-7kpwx",
+            "x-is-trusted": "yes",
+            "x-real-ip": "195.218.12.108"
+          },
+          "params": {},
+          "query": {},
+          "body": [
+            {
+              "Material": "00.00.001",
+              "Created On": "2023-12-14T00:00:00",
+              "Created By": "MERTESH",
+              "Last Change": "2026-01-20T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "FPOKMC",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0,
+              "Unit of Weight": null,
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "MIS",
+              "Material Description": "SCATOLA IMBALLO DIM.60x80xH.60  DIS.00.0"
+            },
+            {
+              "Material": "00.00.002",
+              "Created On": "2023-12-14T00:00:00",
+              "Created By": "MERTESH",
+              "Last Change": "2026-01-20T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "FPOKMC",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0,
+              "Unit of Weight": null,
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "MIS",
+              "Material Description": "SCATOLA IMBALLO DIM.CM 40x60xH .60 DIS.0"
+            },
+            {
+              "Material": "111",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNISP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 1.027,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "446098P",
+              "Manufacturer": "KEN",
+              "Material Description": "Hydrant Wrench Model 111P"
+            },
+            {
+              "Material": "265",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNVTD",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 1,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "AGF",
+              "Material Description": "Kit for 2\" valve model 1011T AGF M1011T"
+            },
+            {
+              "Material": "290",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-22T00:00:00",
+              "Changed By": "RBAIA",
+              "Material Group": "IRNVTD",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 4,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "298",
+              "Manufacturer": "AGF",
+              "Material Description": "Test and Drain Valve Mdl 1500 2\" x 3/8\","
+            },
+            {
+              "Material": "292",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-22T00:00:00",
+              "Changed By": "RBAIA",
+              "Material Group": "IRNVTD",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 3.98,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "AGF",
+              "Material Description": "Test and Drain Valve Mdl 1500 2\" x 1/2\","
+            },
+            {
+              "Material": "577",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-03T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.302,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "13283969",
+              "Manufacturer": "LOC",
+              "Material Description": "LOCTITE 577     250ml"
+            },
+            {
+              "Material": "915",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-03T00:00:00",
+              "Changed By": "RBAIA",
+              "Material Group": "PIPPTO",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 11.1,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "RID",
+              "Material Description": "ROLL GROOVER #915 2\"-6\" #88232"
+            },
+            {
+              "Material": "1390",
+              "Created On": "2021-04-22T00:00:00",
+              "Created By": "LICCARDIA",
+              "Last Change": "2026-03-18T00:00:00",
+              "Changed By": "CHUDZYC",
+              "Material Group": "IRNISP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.5,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "OCV",
+              "Material Description": "Pilot Buna Elastomers, 50-165PSI Spring"
+            },
+            {
+              "Material": "1802",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHYD",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 7,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "JDF",
+              "Material Description": "Vertical Inlet Cabinet"
+            },
+            {
+              "Material": "1825",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 7,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "JDF",
+              "Material Description": "Vertical Outlet Cabinet"
+            },
+            {
+              "Material": "2010",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHYD",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 30,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "JDF",
+              "Material Description": "Horizontal, stainless steel inlet cabine"
+            },
+            {
+              "Material": "2510",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 11,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "PTR",
+              "Material Description": "Hose Rack Model 2510 1,5\" 100Ft"
+            },
+            {
+              "Material": "2792",
+              "Created On": "2024-11-11T00:00:00",
+              "Created By": "RINGENBACHR",
+              "Last Change": "2025-08-08T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 2.27,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "2792",
+              "Manufacturer": "PTR",
+              "Material Description": "1-1/2 Red Painted Hose Rack"
+            },
+            {
+              "Material": "3010",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 10.45,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Hose Rack Assembly 11./2\" NHT 100 Ft. Po"
+            },
+            {
+              "Material": "3285",
+              "Created On": "2020-08-24T00:00:00",
+              "Created By": "RINGENBACHR",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHYD",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.8,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Hose assembly cover 3285"
+            },
+            {
+              "Material": "3756",
+              "Created On": "2019-12-14T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-03-23T00:00:00",
+              "Changed By": "CHUDZYC",
+              "Material Group": "FEPSPF",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 2.727,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 80,
+              "X-distr.chain status": 80,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Selectable Gallonage Nozzle 2.5\" Base, 9"
+            },
+            {
+              "Material": "3805",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 2,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Adapter 2.5\" F British Instant . x 2 1/2"
+            },
+            {
+              "Material": "3825",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 12,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 80,
+              "X-distr.chain status": 80,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Plug, 2 1/2\" British Instantaneous, Roug"
+            },
+            {
+              "Material": "4300",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "FIXPCL",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.65,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "TOL",
+              "Material Description": "TOLCO #4 Pipe Clamp 3\" EG."
+            },
+            {
+              "Material": "5015",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 12.231,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "CRO",
+              "Material Description": "ANG.VAL.5015 2,5\"BR"
+            },
+            {
+              "Material": "5040",
+              "Created On": "2020-08-25T00:00:00",
+              "Created By": "RINGENBACHR",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHYD",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 1.71,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Hose Valve 5040 1-1/2\"x 1-1/2\" NPT"
+            },
+            {
+              "Material": "5310",
+              "Created On": "2020-07-29T00:00:00",
+              "Created By": "LICCARDIA",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNBAL",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 9,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "5310",
+              "Manufacturer": "GUA",
+              "Material Description": "Globe Vlv 2-1/2\" NPT FxM Br"
+            },
+            {
+              "Material": "5525",
+              "Created On": "2019-12-14T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.3,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Cap with Chain, 2 1/2\" NST Rough Brass"
+            },
+            {
+              "Material": "5763",
+              "Created On": "2022-11-14T00:00:00",
+              "Created By": "RINGENBACHR",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 19.47,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "PTR",
+              "Material Description": "FD Inlet 2way 6x2.5x2.5 Brass"
+            },
+            {
+              "Material": "5940",
+              "Created On": "2025-02-04T00:00:00",
+              "Created By": "QUAGLIETTAD",
+              "Last Change": "2026-01-20T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.302,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "13283969",
+              "Manufacturer": "LOC",
+              "Material Description": "LOCTITE SI 5940  100ml"
+            },
+            {
+              "Material": "6114",
+              "Created On": "2019-12-14T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 6.364,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "FDC Single Clapper Two-Way 4\"x 2 1/2\" Br"
+            },
+            {
+              "Material": "6124",
+              "Created On": "2019-12-14T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 8.52,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "FDC Double Clapper Two-Way 4\"x 2 1/2\" Br"
+            },
+            {
+              "Material": "6760",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 1.19,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "CRO",
+              "Material Description": "Round Escutcheon Plate Model 6760 4\" Bra"
+            },
+            {
+              "Material": "7063",
+              "Created On": "2025-02-14T00:00:00",
+              "Created By": "QUAGLIETTAD",
+              "Last Change": "2026-01-20T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.302,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "13283969",
+              "Manufacturer": "LOC",
+              "Material Description": "LOCTITE SF 7063 ML 400"
+            },
+            {
+              "Material": "8120",
+              "Created On": "2020-12-15T00:00:00",
+              "Created By": "RINGENBACHR",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 19.03,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "8120 Fiberclass Firehose Cabinet"
+            },
+            {
+              "Material": "8240",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNHSE",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.02,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "2-1/2\" HOSE GASKET"
+            },
+            {
+              "Material": "9425",
+              "Created On": "2019-12-14T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "PIPPTO",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 2.265,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "GUA",
+              "Material Description": "Pitot tube Kit Model 9425 1 1/2  x 1 1/2"
+            },
+            {
+              "Material": "10033",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.408,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Touch-Paint for Viking Valves Spray Can"
+            },
+            {
+              "Material": "10110",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-22T00:00:00",
+              "Changed By": "RBAIA",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.066,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "10110",
+              "Manufacturer": "VIK",
+              "Material Description": "Restriction Orifice .062 1/4\" NPT"
+            },
+            {
+              "Material": "10158",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVTRM",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 13.8,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Coventional Dry Valve Trim Model F-1 3\""
+            },
+            {
+              "Material": "10308",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.027,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "SCREW,6\" VALVE CLAPPER"
+            },
+            {
+              "Material": "10323",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-07T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "SPKSAC",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.029,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Water Shield 1/2\" Model F-1 Pendent Spri"
+            },
+            {
+              "Material": "10324",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-07T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "SPKSAC",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.031,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Water Shield 3/4\" Model F-1 Pendent Spri"
+            },
+            {
+              "Material": "10325",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-07T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "SPKSAC",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.06,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Sprinkler Guard Assembly Model  D-1"
+            },
+            {
+              "Material": "10326",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-07T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "SPKSAC",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.072,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Water Shield Model E-1 for Upright sprin"
+            },
+            {
+              "Material": "10354",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "IRNBAL",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.147,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "10354",
+              "Manufacturer": "VIK",
+              "Material Description": "Ball Valve 1/4\" 250 PSI"
+            },
+            {
+              "Material": "10355",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-03-03T00:00:00",
+              "Changed By": "GERMANA",
+              "Material Group": "IRNBAL",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.174,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "10355",
+              "Manufacturer": "VIK",
+              "Material Description": "Ball Valve 1/2\" 250 PSI"
+            },
+            {
+              "Material": "10356",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-04-03T00:00:00",
+              "Changed By": "RBAIA",
+              "Material Group": "IRNBAL",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.68,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Ball Valve 1\" 250 PSI"
+            },
+            {
+              "Material": "10364",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-03-05T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "SPKSAC",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.025,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "Protector Cap Recessed Sprinkler"
+            },
+            {
+              "Material": "10367",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 2.42,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "10367",
+              "Manufacturer": "VIK",
+              "Material Description": "Thermostatic Release Model C-2  Nitrogen"
+            },
+            {
+              "Material": "10510",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-03-03T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.707,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "10510",
+              "Manufacturer": "VIK",
+              "Material Description": "Diaphragm Rubber for Deluge and Flow Con"
+            },
+            {
+              "Material": "10512",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-06T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.905,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "10512",
+              "Manufacturer": "VIK",
+              "Material Description": "Seat Rubber for Deluge and Flow Control"
+            },
+            {
+              "Material": "10514",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 2.767,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": "10514",
+              "Manufacturer": "VIK",
+              "Material Description": "Ring Clamp, Upper Diaphragm for 8\" Delug"
+            },
+            {
+              "Material": "10526",
+              "Created On": "2019-12-13T00:00:00",
+              "Created By": "CALVERLEYG",
+              "Last Change": "2026-02-23T00:00:00",
+              "Changed By": "SOUDAISC",
+              "Material Group": "VKVVSP",
+              "Base Unit of Measure": "EA",
+              "Gross Weight": 0.013,
+              "Unit of Weight": "KG",
+              "Cross-Plant Material Status": 20,
+              "X-distr.chain status": 20,
+              "Manufacturer Part No.": null,
+              "Manufacturer": "VIK",
+              "Material Description": "O-Ring Dia. 11.3/4\""
+            }
+          ],
+          "webhookUrl": "https://bonana-agents.app.n8n.cloud/webhook/9363a13f-6a3c-4f99-99e5-7356a68831b7",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "503387b2-375d-418c-ad7d-e2be13d9c029",
+  "activeVersionId": "503387b2-375d-418c-ad7d-e2be13d9c029",
+  "versionCounter": 81,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-28T20:33:52.723Z",
+      "createdAt": "2026-04-28T20:33:52.723Z",
+      "role": "workflow:owner",
+      "workflowId": "VCAF23eWI9yFfp1X",
+      "projectId": "Eem3DLwlihqFj4vU",
+      "project": {
+        "updatedAt": "2026-03-05T07:28:04.000Z",
+        "createdAt": "2025-09-16T06:48:01.236Z",
+        "id": "Eem3DLwlihqFj4vU",
+        "name": "1. Playground",
+        "type": "team",
+        "icon": {
+          "type": "emoji",
+          "value": "🧪"
+        },
+        "description": "Our Playground. We use this for rapid prototyping, testing new community nodes, and \"destructive\" testing. We keep this isolated from any live data sources to ensure we can fail fast without risk.",
+        "creatorId": null
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-05-20T20:25:36.295Z",
+      "createdAt": "2026-05-20T20:24:19.958Z",
+      "id": "3lcnYljheVrVXBMc",
+      "name": "SAP S/4HANA"
+    },
+    {
+      "updatedAt": "2026-05-20T20:24:11.729Z",
+      "createdAt": "2026-05-20T20:24:11.729Z",
+      "id": "FTQXTn2RaNxNU0Vm",
+      "name": "Viking"
+    },
+    {
+      "updatedAt": "2026-03-16T09:14:58.650Z",
+      "createdAt": "2026-01-12T08:56:32.395Z",
+      "id": "XQbgZx5MGzZduBc7",
+      "name": "HubSpot"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-20T20:45:26.000Z",
+    "createdAt": "2026-05-20T20:44:33.893Z",
+    "versionId": "503387b2-375d-418c-ad7d-e2be13d9c029",
+    "workflowId": "VCAF23eWI9yFfp1X",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "9363a13f-6a3c-4f99-99e5-7356a68831b7",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "abb4cc4f-f2a2-422c-a15b-dad5d29a36d5",
+        "name": "Webhook",
+        "webhookId": "73c4ad5a-a351-4244-8674-73cee5c7fea8"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "body",
+          "options": {}
+        },
+        "id": "63aa1ebb-11cd-4baa-a904-3c741fcb92c3",
+        "name": "Split Out by Products",
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          448,
+          -128
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "1",
+                "name": "id",
+                "value": "={{ $json.Material }}",
+                "type": "string"
+              },
+              {
+                "id": "2",
+                "name": "idProperty",
+                "value": "hs_sku",
+                "type": "string"
+              },
+              {
+                "id": "3",
+                "name": "properties",
+                "type": "object",
+                "value": "={{ { \"name\": $json[\"Manufacturer Part No.\"] || $json[\"Material\"], \"hs_sku\": $json[\"Material\"], \"description\": $json[\"Material Description\"], \"sap_created_by\": $json[\"Created By\"], \"sap_last_change\": $json[\"Last Change\"] ? new Date($json[\"Last Change\"].split(\"T\")[0]).getTime() : null, \"sap_changed_by\": $json[\"Changed By\"], \"sap_material_group\": $json[\"Material Group\"], \"sap_base_unit_of_measure\": $json[\"Base Unit of Measure\"], \"sap_net_weight\": $json[\"Gross Weight\"], \"sap_unit_of_weight\": $json[\"Unit of Weight\"], \"sap_cross_plant_material_status\": String($json[\"Cross-Plant Material Status\"]), \"sap_xdistribution_chain_status\": String($json[\"X-distr.chain status\"]), \"sap_manufacturer_part_number\": $json[\"Manufacturer Part No.\"], \"sap_manufacturer\": $json.Manufacturer } }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "477d2449-59b8-4de4-8294-58d54212083d",
+        "name": "Map SAP Properties to HubSpot Properties",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          672,
+          -128
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "noData",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "id": "3c588013-0c77-4c35-ae4f-34e362c6c2e8",
+        "name": "Respond 200 Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1120,
+          -288
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 0.2
+        },
+        "id": "f6cacec5-5e4c-4af4-a21b-f68ec48f1591",
+        "name": "Wait",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          1120,
+          -96
+        ],
+        "webhookId": "8cebd4ca-0992-4fcd-ba8b-ca75bc2a4bb4"
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "destinationFieldName": "inputs",
+          "options": {}
+        },
+        "id": "246173b7-f02b-42d6-8ba1-0fed3c11164d",
+        "name": "Assemble Payload",
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          -96
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const inputs = $input.first().json.inputs;\nconst cleaned = inputs.map(item => ({\n  ...item,\n  properties: Object.fromEntries(\n    Object.entries(item.properties).filter(([_, v]) => v !== null && v !== undefined && v !== '')\n  )\n}));\nreturn [{ json: { inputs: cleaned } }];"
+        },
+        "id": "c8a5b439-e305-4db0-a507-499ef8ce77fc",
+        "name": "Strip Null Properties",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          -96
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.hubapi.com/crm/v3/objects/products/batch/upsert",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "hubspotAppToken",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json }}",
+          "options": {}
+        },
+        "id": "61bf70dd-b3e8-4271-bf97-78de3f593ec6",
+        "name": "Upsert Products in HubSpot",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1792,
+          -80
+        ],
+        "retryOnFail": true,
+        "waitBetweenTries": 2000,
+        "maxTries": 3,
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "9AfA8y6BZNuxD6hd",
+            "name": "Trengo"
+          },
+          "hubspotAppToken": {
+            "id": "llJei5LfGtLABNZF",
+            "name": "Viking | SAP to HubSpot Integration | Sandbox"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "batchSize": 100,
+          "options": {}
+        },
+        "id": "7f6dd6b6-edb7-41c7-bf5a-796f4b06409f",
+        "name": "Loop over Products",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          896,
+          -128
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": {
+            "error": "Body must be a non-empty array of SAP products"
+          },
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "22e9a8ff-6d35-4058-a0ea-e517c003a5d4",
+        "name": "Respond 400 Bad Request",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          448,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "noData",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "38e46c38-032f-4452-bf1a-43fa1e15eb92",
+        "name": "Respond 400 Batch Error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          2016,
+          -80
+        ]
+      },
+      {
+        "parameters": {
+          "errorMessage": "={{ $json.message || $json.error || 'HubSpot upsert failed' }}"
+        },
+        "id": "af4d3817-2f97-470a-b6e0-8178eb4088ad",
+        "name": "Stop and Error",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          2240,
+          -80
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "1",
+                "leftValue": "={{ Array.isArray($json.body) && $json.body.length > 0 }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                },
+                "rightValue": true
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "dbc6f553-e4e0-4215-ad95-cf45a49ac235",
+        "name": "Validate Input",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          224,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validate Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out by Products": {
+        "main": [
+          [
+            {
+              "node": "Map SAP Properties to HubSpot Properties",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Map SAP Properties to HubSpot Properties": {
+        "main": [
+          [
+            {
+              "node": "Loop over Products",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "Assemble Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Assemble Payload": {
+        "main": [
+          [
+            {
+              "node": "Strip Null Properties",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Strip Null Properties": {
+        "main": [
+          [
+            {
+              "node": "Upsert Products in HubSpot",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upsert Products in HubSpot": {
+        "main": [
+          [
+            {
+              "node": "Loop over Products",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond 400 Batch Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop over Products": {
+        "main": [
+          [
+            {
+              "node": "Respond 200 Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond 400 Batch Error": {
+        "main": [
+          [
+            {
+              "node": "Stop and Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Input": {
+        "main": [
+          [
+            {
+              "node": "Split Out by Products",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond 400 Bad Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Remco Verheijen",
+    "name": "Version 503387b2",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-20T20:45:26.205Z",
+        "id": 763,
+        "workflowId": "VCAF23eWI9yFfp1X",
+        "versionId": "503387b2-375d-418c-ad7d-e2be13d9c029",
+        "event": "activated",
+        "userId": "7a7a32b7-100a-434c-963c-1350bcbbe007"
+      },
+      {
+        "createdAt": "2026-05-21T15:05:15.650Z",
+        "id": 780,
+        "workflowId": "VCAF23eWI9yFfp1X",
+        "versionId": "503387b2-375d-418c-ad7d-e2be13d9c029",
+        "event": "activated",
+        "userId": "7a7a32b7-100a-434c-963c-1350bcbbe007"
+      },
+      {
+        "createdAt": "2026-05-21T15:05:15.496Z",
+        "id": 779,
+        "workflowId": "VCAF23eWI9yFfp1X",
+        "versionId": "503387b2-375d-418c-ad7d-e2be13d9c029",
+        "event": "deactivated",
+        "userId": "7a7a32b7-100a-434c-963c-1350bcbbe007"
+      }
+    ]
+  }
+}

@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         client: [client-a, client-b, client-c]
-      max-parallel: 1       # sequential — prevents manifest commit conflicts
+      max-parallel: 1       # sequential, prevents manifest commit conflicts
       fail-fast: false      # continue deploying remaining clients if one fails
     environment: ${{ matrix.client }}
     runs-on: ubuntu-latest

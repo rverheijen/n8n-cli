@@ -380,10 +380,10 @@ if (args[0] === 'workflow' && args[1] === 'diff') {
 
   const filename = path.basename(file);
   const manifest = readManifest();
-  const remoteId = getSection(manifest, currentEnvName, 'workflows')[filename];
+  const remoteId = getSection(manifest, currentEnvName, 'workflows')[filename] ?? local.id;
 
   if (!remoteId) {
-    console.log(`${filename} has not been pushed to env: ${currentEnvName}`);
+    console.log(`${filename} has no remote ID (not yet pushed and no id field in JSON)`);
     process.exit(0);
   }
 

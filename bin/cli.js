@@ -168,6 +168,53 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
   process.exit(result.status ?? 0);
 }
 
+// Custom command help — print usage rather than passing --help to the real
+// CLI, which would error since pull/push/validate are not known to it.
+const CUSTOM_HELP = {
+  pull: [
+    'Fetch a workflow by ID and save it to <id>.json',
+    '',
+    'USAGE',
+    '  $ n8n-cli workflow pull <id> [--dir <path>]',
+    '  $ n8n-cli workflow pull --all [--dir <path>]',
+    '',
+    'FLAGS',
+    '  --all          Pull all workflows',
+    `  --dir <path>   Target directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
+    '  --env <name>   Environment name for manifest key',
+    '  --env-file <path>  Load a specific .env file',
+  ],
+  push: [
+    'Push a workflow file to an n8n instance (create or update)',
+    '',
+    'USAGE',
+    '  $ n8n-cli workflow push <file>',
+    '  $ n8n-cli workflow push --all [--dir <path>]',
+    '',
+    'FLAGS',
+    '  --all          Push all workflows in the target directory',
+    `  --dir <path>   Source directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
+    '  --env <name>   Environment name for manifest key',
+    '  --env-file <path>  Load a specific .env file',
+  ],
+  validate: [
+    'Validate a workflow JSON file',
+    '',
+    'USAGE',
+    '  $ n8n-cli workflow validate <file>',
+    '',
+    'DESCRIPTION',
+    '  Checks that the file is valid JSON and contains the required n8n',
+    '  workflow fields (name, nodes, connections). Exits 1 on failure.',
+  ],
+};
+
+if (args[0] === 'workflow' && CUSTOM_HELP[args[1]] &&
+    (args.includes('--help') || args.includes('-h'))) {
+  console.log(CUSTOM_HELP[args[1]].join('\n'));
+  process.exit(0);
+}
+
 // workflow pull --all
 if (args[0] === 'workflow' && args[1] === 'pull' && all) {
   console.log('Fetching workflow list...');

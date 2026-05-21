@@ -128,13 +128,16 @@ function pushWorkflow(filepath, envKey, manifest, env) {
 const { remaining: args, envFile, envName, dir, all } = parseCustomFlags(process.argv.slice(2));
 
 // Load .env file — shell env vars always take priority
+// --env-file: explicit path, errors if not found
+// --env: loads .env.<name> if it exists, otherwise just sets the manifest key (safe for CI)
+// default: loads .env if present, silently skips if absent
 const envFilePath = envFile ?? (envName ? `.env.${envName}` : '.env');
 if (fs.existsSync(envFilePath)) {
   const parsed = parseDotenv(fs.readFileSync(envFilePath, 'utf8'));
   for (const [key, value] of Object.entries(parsed)) {
     if (!(key in process.env)) process.env[key] = value;
   }
-} else if (envFile || envName) {
+} else if (envFile) {
   console.error(`Error: env file not found: ${envFilePath}`);
   process.exit(1);
 }

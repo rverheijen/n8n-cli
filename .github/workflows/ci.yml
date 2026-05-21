@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - 'n8n/workflows/**.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install n8n-cli
+        run: npm install -g github:yourusername/n8n-cli
+
+      - name: Validate changed workflows
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'n8n/workflows/*.json' | \
+          while read file; do
+            [ -f "$file" ] || continue
+            echo "Validating $file..."
+            n8n-cli workflow validate "$file"
+          done

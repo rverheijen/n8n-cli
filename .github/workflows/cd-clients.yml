@@ -1,0 +1,48 @@
+name: Deploy to clients
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'n8n/workflows/**.json'
+  workflow_dispatch:
+    inputs:
+      client:
+        description: 'Deploy to a specific client only (leave empty to deploy all)'
+        required: false
+
+jobs:
+  deploy:
+    strategy:
+      matrix:
+        client: [client-a, client-b, client-c]
+      max-parallel: 1       # sequential — prevents manifest commit conflicts
+      fail-fast: false      # continue deploying remaining clients if one fails
+    environment: ${{ matrix.client }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}    # always pull latest to get previous client's manifest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install n8n-cli
+        run: npm install -g github:yourusername/n8n-cli
+
+      - name: Push workflows to ${{ matrix.client }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli workflow push --all --env ${{ matrix.client }}
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add n8n/n8n-cli.manifest.json
+          git diff --staged --quiet || git commit -m "chore: update manifest [${{ matrix.client }}] [skip ci]"
+          git push

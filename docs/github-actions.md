@@ -68,7 +68,7 @@ your-project/
 Add `n8n-cli` as a dev dependency so GitHub Actions can install it via `npm ci`:
 
 ```bash
-npm install --save-dev github:yourusername/n8n-cli
+npm install --save-dev github:rverheijen/n8n-cli
 ```
 
 Or install it globally in each workflow step (see the workflow examples below).
@@ -254,7 +254,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:yourusername/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
 
       - name: Validate changed workflows
         run: |
@@ -298,7 +298,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:yourusername/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
 
       - name: Push variables
         env:
@@ -373,7 +373,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:yourusername/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
 
       - name: Push variables to ${{ matrix.client }}
         env:

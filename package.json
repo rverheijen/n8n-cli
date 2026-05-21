@@ -7,6 +7,12 @@
   "bin": {
     "n8n-cli": "./bin/cli.js"
   },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE.md"
+  ],
   "engines": {
     "node": ">=18.0.0"
   },

@@ -7,7 +7,7 @@ All official `n8n-cli` commands and flags pass through unchanged. This wrapper a
 ## Installation
 
 ```bash
-npm install -g github:yourusername/n8n-cli
+npm install -g github:rverheijen/n8n-cli
 ```
 
 Installs both this wrapper and the official `@n8n/cli` in one step. After installation, the `n8n-cli` command routes through this wrapper.

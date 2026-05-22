@@ -23,7 +23,7 @@ Developer pushes code
                  │                                               │ passes
                  │                                               ▼
                  │                                ┌────────────────────────────┐
-                 │                                │  CD: QA                    │
+                 │                                │  CD: quality_assurance     │
                  │                                │  1. variable push          │
                  │                                │  2. data-table push        │
                  │                                │  3. workflow push --all    │
@@ -498,14 +498,14 @@ jobs:
 
 ---
 
-### CD: Promote through sandbox, QA, and production
+### CD: Promote through sandbox, quality_assurance, and production
 
 **`.github/workflows/cd-promote.yml`**
 
 Deploys sequentially through three environments on merge to `main`. Each environment is gated by the previous one. Production requires manual approval via a GitHub Environment protection rule.
 
 **Setup:**
-1. Create three GitHub Environments: `sandbox`, `qa`, `production` (**Settings → Environments**)
+1. Create three GitHub Environments: `sandbox`, `quality_assurance`, `production` (**Settings → Environments**)
 2. Add `N8N_API_URL` and `N8N_API_KEY` secrets to each
 3. On the `production` environment, enable **Required reviewers** to add a manual approval gate
 
@@ -569,10 +569,10 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: update manifest [sandbox] [skip ci]"
           git push
 
-  deploy-qa:
-    name: Deploy to QA
+  deploy-quality_assurance:
+    name: Deploy to quality_assurance
     needs: deploy-sandbox
-    environment: qa
+    environment: quality_assurance
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -590,37 +590,37 @@ jobs:
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli tag push --env qa
+        run: n8n-cli tag push --env quality_assurance
 
       - name: Push variables
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli variable push --env qa
+        run: n8n-cli variable push --env quality_assurance
 
       - name: Push data tables
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli data-table push --all --env qa
+        run: n8n-cli data-table push --all --env quality_assurance
 
       - name: Push workflows
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli workflow push --all --activate --env qa
+        run: n8n-cli workflow push --all --activate --env quality_assurance
 
       - name: Commit updated manifest
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add n8n/n8n-cli.manifest.json
-          git diff --staged --quiet || git commit -m "chore: update manifest [qa] [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: update manifest [quality_assurance] [skip ci]"
           git push
 
   deploy-production:
     name: Deploy to production
-    needs: deploy-qa
+    needs: deploy-quality_assurance
     environment: production
     runs-on: ubuntu-latest
     steps:
@@ -668,14 +668,14 @@ jobs:
           git push
 ```
 
-The `needs:` keyword enforces the promotion order: sandbox must pass before QA runs, and QA must pass before production is attempted. With **Required reviewers** set on the `production` environment, GitHub pauses the pipeline and waits for manual approval before the production job starts.
+The `needs:` keyword enforces the promotion order: sandbox must pass before quality_assurance runs, and quality_assurance must pass before production is attempted. With **Required reviewers** set on the `production` environment, GitHub pauses the pipeline and waits for manual approval before the production job starts.
 
 The manifest grows one section per environment:
 
 ```json
 {
   "sandbox":    { "workflows": { "my-workflow.json": "wf-abc" } },
-  "qa":         { "workflows": { "my-workflow.json": "wf-def" } },
+  "quality_assurance":         { "workflows": { "my-workflow.json": "wf-def" } },
   "production": { "workflows": { "my-workflow.json": "wf-xyz" } }
 }
 ```
@@ -685,7 +685,7 @@ Set up credential mapping for each environment once before the first deployment:
 ```bash
 n8n-cli credential pull
 n8n-cli credential map --env sandbox
-n8n-cli credential map --env qa
+n8n-cli credential map --env quality_assurance
 n8n-cli credential map --env production
 ```
 

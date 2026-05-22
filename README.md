@@ -35,7 +35,7 @@ This installs the official skill and extends it with all wrapper commands so you
 
 | Command | Description |
 |---|---|
-| `workflow pull <id>` | Fetch a workflow by ID and save to `<id>.json` |
+| `workflow pull <id>` | Fetch a workflow by ID and save to `n8n/workflows/<id>.json` |
 | `workflow pull --all` | Fetch all workflows |
 | `workflow push <file>` | Push a workflow file (create or update) |
 | `workflow push --all` | Push all workflows in the source directory |
@@ -111,11 +111,11 @@ These flags apply to all custom commands and are stripped before passing to the 
 
 ### `workflow pull <id>`
 
-Fetch a single workflow by ID and save it to `<id>.json`.
+Fetch a single workflow by ID and save it to `n8n/workflows/<id>.json`.
 
 ```bash
 n8n-cli workflow pull 1234
-n8n-cli workflow pull 1234 --dir n8n/workflows
+n8n-cli workflow pull 1234 --dir ./backup
 ```
 
 ### `workflow pull --all`

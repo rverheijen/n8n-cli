@@ -125,7 +125,7 @@ function formatDataTableDiff(diff, label) {
 
 const WORKFLOW_HELP = {
   pull: [
-    'Fetch a workflow by ID and save it to <id>.json',
+    `Fetch a workflow by ID and save it to ${DEFAULT_WORKFLOWS_DIR}/<id>.json`,
     '',
     'USAGE',
     '  $ n8n-cli workflow pull <id> [--dir <path>]',
@@ -138,8 +138,7 @@ const WORKFLOW_HELP = {
     '  --env-file <path>  Load a specific .env file',
     '',
     'DESCRIPTION',
-    '  With --all, saves each workflow to <dir>/<id>.json. Without --all,',
-    '  saves to <id>.json in the current directory, or in --dir if given.',
+    `  Saves each workflow to <dir>/<id>.json (default: ./${DEFAULT_WORKFLOWS_DIR}).`,
   ],
   push: [
     'Push a workflow file to an n8n instance (create or update)',
@@ -577,8 +576,8 @@ if (args[0] === 'workflow' && args[1] === 'pull') {
     process.exit(1);
   }
   const filename = `${workflowId}.json`;
-  const filepath = dir ? path.join(dir, filename) : filename;
-  if (dir) fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(workflowsDir, { recursive: true });
+  const filepath = path.join(workflowsDir, filename);
   if (pullWorkflow(workflowId, filepath, env)) {
     console.log(`Saved to ${filepath}`);
     process.exit(0);

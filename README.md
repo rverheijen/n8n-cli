@@ -473,7 +473,7 @@ Push tags to the instance. Creates any tag that does not exist yet. Skips tags t
 ```bash
 n8n-cli tag push
 n8n-cli tag push --env instance-a
-n8n-cli tag push path/to/tags.json --env instance-a
+n8n-cli tag push n8n/tags.json --env instance-a
 n8n-cli tag push --dir n8n/tags --env instance-a
 ```
 

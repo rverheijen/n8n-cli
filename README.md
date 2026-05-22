@@ -1,6 +1,6 @@
 # n8n-cli
 
-A custom wrapper around the official [`n8n-cli`](https://www.npmjs.com/package/@n8n/cli) that brings our CI/CD best practices through deployment, diffing, and multi-environment sync commands.
+A custom wrapper around the official [`n8n-cli`](https://www.npmjs.com/package/@n8n/cli) that brings our CI/CD best practices through deployment, diffing, multi-environment sync, and promotion pipeline commands.
 
 All official `n8n-cli` commands and flags pass through unchanged. This wrapper adds CI/CD-oriented commands on top.
 

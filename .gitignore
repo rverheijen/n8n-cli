@@ -1,3 +1,5 @@
 node_modules/
 .env*
 .claude/skills/
+.n8n_cli/
+n8n/

@@ -33,7 +33,6 @@ npm uninstall -g n8n-cli
 | `workflow diff --all` | Compare all local files against remote |
 | `workflow activate <file\|id>` | Activate a workflow (accepts filename or raw ID) |
 | `workflow deactivate <file\|id>` | Deactivate a workflow |
-
 | `workflow test <file>` | Trigger a workflow webhook and report the result |
 | `variable pull` | Fetch all variables |
 | `variable push [<file>]` | Push variables (create or update) |
@@ -344,7 +343,7 @@ n8n-cli credential push path/to/credentials.json --env client-a
 
 After pushing, fill in the actual credential values on the target instance.
 
-### `credential map [<file>]`
+### `credential map`
 
 Match credentials that already exist on both instances by name and type, and write the mapping to `n8n-cli.mapping.json`. No stubs are created.
 

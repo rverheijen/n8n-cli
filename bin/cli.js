@@ -15,12 +15,14 @@ import {
   pullAllWorkflows,
   activateWorkflow,
   deactivateWorkflow,
+  deleteWorkflow,
 } from '../lib/workflow.js';
 import { testWorkflow } from '../lib/test.js';
 import {
   DEFAULT_VARIABLES_FILE,
   pullVariables,
   pushVariables,
+  diffVariables,
   readVariablesFile,
   writeVariablesFile,
 } from '../lib/variable.js';
@@ -30,6 +32,7 @@ import {
   pullAllDataTables,
   pushDataTable,
   pushAllDataTables,
+  diffDataTable,
 } from '../lib/data-table.js';
 import {
   DEFAULT_CREDENTIALS_FILE,
@@ -99,6 +102,25 @@ function translateWorkflowFlag(cliArgs, manifest, envName) {
   return result;
 }
 
+function formatDataTableDiff(diff, label) {
+  let out = `${label}\n\n`;
+  if (diff.addedCols.length || diff.removedCols.length || diff.changedCols.length) {
+    out += '  columns:\n';
+    for (const c of diff.addedCols)   out += `    + ${c.name} (${c.type})\n`;
+    for (const c of diff.removedCols) out += `    - ${c.name} (${c.type})\n`;
+    for (const c of diff.changedCols) out += `    ~ ${c.name}: type "${c.remoteType}" -> "${c.localType}"\n`;
+    out += '\n';
+  }
+  if (diff.addedRows.length || diff.removedRows.length || diff.changedRows.length) {
+    out += '  rows:\n';
+    for (const r of diff.addedRows)   out += `    + ${JSON.stringify(r)}\n`;
+    for (const r of diff.removedRows) out += `    - ${JSON.stringify(r)}\n`;
+    for (const r of diff.changedRows) out += `    ~ ${JSON.stringify(r)}\n`;
+    out += '\n';
+  }
+  return out;
+}
+
 // --- Help text for custom commands ---
 
 const WORKFLOW_HELP = {
@@ -123,10 +145,12 @@ const WORKFLOW_HELP = {
     'Push a workflow file to an n8n instance (create or update)',
     '',
     'USAGE',
-    '  $ n8n-cli workflow push <file>',
-    '  $ n8n-cli workflow push --all [--dir <path>]',
+    '  $ n8n-cli workflow push <file> [--activate]',
+    '  $ n8n-cli workflow push --all [--dir <path>] [--activate] [--prune]',
     '',
     'FLAGS',
+    '  --activate         Activate after push if the local file has active: true',
+    '  --prune            Delete remote workflows not present locally (--all only)',
     '  --all              Push all workflows in the target directory',
     `  --dir <path>       Source directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
     '  --env <name>       Environment name',
@@ -137,6 +161,13 @@ const WORKFLOW_HELP = {
     '  remote ID in n8n-cli.manifest.json. On subsequent pushes, updates the',
     '  existing workflow. Credential IDs are remapped via n8n-cli.mapping.json',
     '  before pushing.',
+    '',
+    '  With --activate, workflows that have active: true in the local JSON are',
+    '  activated after push. Sub-workflows and manual-trigger workflows that',
+    '  were inactive when pulled are left inactive.',
+    '',
+    '  With --prune (--all only), workflows tracked in the manifest but whose',
+    '  local file no longer exists are deleted from the remote.',
   ],
   validate: [
     'Validate a workflow JSON file',
@@ -237,8 +268,26 @@ const VARIABLE_HELP = {
     'Push variables to the instance (create or update)',
     '',
     'USAGE',
-    '  $ n8n-cli variable push [<file>]',
-    `  $ n8n-cli variable push [--dir <path>]`,
+    '  $ n8n-cli variable push [<file>] [--prune]',
+    `  $ n8n-cli variable push [--dir <path>] [--prune]`,
+    '',
+    'FLAGS',
+    '  --prune            Delete remote variables not present in the local file',
+    `  --dir <path>       Source file  (default: ./${DEFAULT_VARIABLES_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Reads key/value pairs from variables.json (or <file> if given). Creates',
+    '  missing variables and updates existing ones.',
+    '',
+    '  With --prune, remote variables not present in the local file are deleted.',
+  ],
+  diff: [
+    'Compare local variables against the remote instance',
+    '',
+    'USAGE',
+    '  $ n8n-cli variable diff [<file>] [--env <name>]',
     '',
     'FLAGS',
     `  --dir <path>       Source file  (default: ./${DEFAULT_VARIABLES_FILE})`,
@@ -246,9 +295,9 @@ const VARIABLE_HELP = {
     '  --env-file <path>  Load a specific .env file',
     '',
     'DESCRIPTION',
-    '  Reads key/value pairs from variables.json (or <file> if given). Creates',
-    '  missing variables and updates existing ones. Does not delete variables',
-    '  not in the file.',
+    '  Reads variables.json and compares it to the remote instance. Shows',
+    '  variables that would be created, deleted (with --prune), or updated.',
+    '  Exits 1 if differences are found, 0 if up to date.',
   ],
 };
 
@@ -275,9 +324,10 @@ const DATA_TABLE_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli data-table push <file>',
-    '  $ n8n-cli data-table push --all [--dir <path>]',
+    '  $ n8n-cli data-table push --all [--dir <path>] [--prune]',
     '',
     'FLAGS',
+    '  --prune            Delete remote tables not present locally (--all only)',
     '  --all              Push all data tables in the target directory',
     `  --dir <path>       Source directory  (default: ./${DEFAULT_DATA_TABLES_DIR})`,
     '  --env <name>       Environment name',
@@ -287,6 +337,27 @@ const DATA_TABLE_HELP = {
     '  Reads a JSON file with name, columns, upsertKey and rows. Creates the',
     '  table if it does not exist, then upserts all rows using upsertKey as',
     '  the match column.',
+    '',
+    '  With --prune (--all only), tables tracked in the manifest but whose',
+    '  local file no longer exists are deleted from the remote.',
+  ],
+  diff: [
+    'Compare a local data table against the remote version',
+    '',
+    'USAGE',
+    '  $ n8n-cli data-table diff <file> [--env <name>]',
+    '  $ n8n-cli data-table diff --all  [--env <name>]',
+    '',
+    'FLAGS',
+    '  --all              Diff all local data tables',
+    `  --dir <path>       Source directory  (default: ./${DEFAULT_DATA_TABLES_DIR})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Fetches the remote data table and compares columns and rows against the',
+    '  local file. Shows added/removed columns and row-level changes by upsertKey.',
+    '  Exits 1 if differences are found, 0 if up to date.',
   ],
 };
 
@@ -512,6 +583,8 @@ if (args[0] === 'workflow' && args[1] === 'pull') {
 
 // workflow push --all
 if (args[0] === 'workflow' && args[1] === 'push' && all) {
+  const activate = args.includes('--activate');
+  const prune    = args.includes('--prune');
   const manifest = readManifest();
   const mapping  = readMapping(currentEnvName);
   const files = fs.existsSync(workflowsDir)
@@ -524,22 +597,40 @@ if (args[0] === 'workflow' && args[1] === 'push' && all) {
   }
 
   console.log(`Pushing ${files.length} workflow(s) to env: ${currentEnvName}\n`);
-  let pushed = 0, failed = 0;
+  let pushed = 0, deleted = 0, failed = 0;
 
   for (const filename of files) {
     const filepath = path.join(workflowsDir, filename);
-    if (pushWorkflow(filepath, currentEnvName, manifest, env, mapping)) pushed++;
+    if (pushWorkflow(filepath, currentEnvName, manifest, env, mapping, { activate })) pushed++;
     else failed++;
   }
 
+  if (prune) {
+    const workflowSection = getSection(manifest, currentEnvName, 'workflows');
+    const localFiles = new Set(files);
+    for (const [filename, remoteId] of Object.entries(workflowSection)) {
+      if (!localFiles.has(filename)) {
+        if (deleteWorkflow(remoteId, env)) {
+          delete workflowSection[filename];
+          console.log(`Deleted  ${filename} (id: ${remoteId})`);
+          deleted++;
+        } else {
+          failed++;
+        }
+      }
+    }
+  }
+
   writeManifest(manifest);
-  console.log(`\n${pushed} pushed${failed > 0 ? `, ${failed} failed` : ''} to env: ${currentEnvName}`);
+  const deletedPart = prune ? `, ${deleted} deleted` : '';
+  console.log(`\n${pushed} pushed${deletedPart}${failed > 0 ? `, ${failed} failed` : ''} to env: ${currentEnvName}`);
   process.exit(failed > 0 ? 1 : 0);
 }
 
 // workflow push <file>
 if (args[0] === 'workflow' && args[1] === 'push') {
-  const file = args[2];
+  const file     = args.slice(2).find(a => !a.startsWith('-'));
+  const activate = args.includes('--activate');
   if (!file) {
     console.error('Usage: n8n-cli workflow push <file>\n       n8n-cli workflow push --all [--dir <path>]');
     process.exit(1);
@@ -547,7 +638,7 @@ if (args[0] === 'workflow' && args[1] === 'push') {
   const manifest = readManifest();
   const mapping  = readMapping(currentEnvName);
   console.log(`Pushing to env: ${currentEnvName}`);
-  const success = pushWorkflow(file, currentEnvName, manifest, env, mapping);
+  const success = pushWorkflow(file, currentEnvName, manifest, env, mapping, { activate });
   writeManifest(manifest);
   process.exit(success ? 0 : 1);
 }
@@ -705,7 +796,8 @@ if (args[0] === 'variable' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
     `  variable pull    Fetch all variables\n` +
-    `  variable push    Push variables (create or update)\n`,
+    `  variable push    Push variables (create or update)\n` +
+    `  variable diff    Compare local variables against remote\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -724,11 +816,36 @@ if (args[0] === 'variable' && args[1] === 'pull') {
 if (args[0] === 'variable' && args[1] === 'push') {
   const file      = args[2] && !args[2].startsWith('--') ? args[2] : null;
   const filepath  = file ?? (variablesFile === DEFAULT_VARIABLES_FILE ? DEFAULT_VARIABLES_FILE : variablesFile);
+  const prune     = args.includes('--prune');
   const variables = readVariablesFile(filepath);
-  console.log(`Pushing ${variables.length} variable(s) to env: ${currentEnvName}\n`);
-  const { created, updated, failed } = pushVariables(variables, env);
-  console.log(`\n${created} created, ${updated} updated${failed > 0 ? `, ${failed} failed` : ''}`);
+  console.log(`Pushing ${variables.length} variable(s) to env: ${currentEnvName}${prune ? ' (--prune)' : ''}\n`);
+  const { created, updated, deleted, failed } = pushVariables(variables, env, { prune });
+  const deletedPart = prune ? `, ${deleted} deleted` : '';
+  console.log(`\n${created} created, ${updated} updated${deletedPart}${failed > 0 ? `, ${failed} failed` : ''}`);
   process.exit(failed > 0 ? 1 : 0);
+}
+
+// variable diff
+if (args[0] === 'variable' && args[1] === 'diff') {
+  const file      = args[2] && !args[2].startsWith('--') ? args[2] : null;
+  const filepath  = file ?? (variablesFile === DEFAULT_VARIABLES_FILE ? DEFAULT_VARIABLES_FILE : variablesFile);
+  const variables = readVariablesFile(filepath);
+  const diff      = diffVariables(variables, env);
+  if (!diff) process.exit(1);
+
+  const label = `${path.basename(filepath)} vs remote (env: ${currentEnvName})`;
+  const hasChanges = diff.added.length || diff.removed.length || diff.changed.length;
+
+  if (!hasChanges) {
+    console.log(`${label}: up to date`);
+    process.exit(0);
+  }
+
+  console.log(`${label}\n`);
+  for (const v of diff.added)   console.log(`  + ${v.key}`);
+  for (const v of diff.removed) console.log(`  - ${v.key}`);
+  for (const v of diff.changed) console.log(`  ~ ${v.key}: "${v.remoteValue}" -> "${v.localValue}"`);
+  process.exit(1);
 }
 
 // data-table --help
@@ -738,7 +855,8 @@ if (args[0] === 'data-table' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
     `  data-table pull          Fetch a data table by name, or all\n` +
-    `  data-table push          Push a data table (create or upsert rows)\n`,
+    `  data-table push          Push a data table (create or upsert rows)\n` +
+    `  data-table diff          Compare a local data table against remote\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -770,8 +888,9 @@ if (args[0] === 'data-table' && args[1] === 'pull') {
 
 // data-table push --all
 if (args[0] === 'data-table' && args[1] === 'push' && all) {
+  const prune    = args.includes('--prune');
   const manifest = readManifest();
-  const ok = pushAllDataTables(tablesDir, currentEnvName, manifest, env);
+  const ok = pushAllDataTables(tablesDir, currentEnvName, manifest, env, { prune });
   writeManifest(manifest);
   process.exit(ok ? 0 : 1);
 }
@@ -788,6 +907,66 @@ if (args[0] === 'data-table' && args[1] === 'push') {
   const success = pushDataTable(file, currentEnvName, manifest, env);
   writeManifest(manifest);
   process.exit(success ? 0 : 1);
+}
+
+// data-table diff --all
+if (args[0] === 'data-table' && args[1] === 'diff' && all) {
+  const files = fs.existsSync(tablesDir)
+    ? fs.readdirSync(tablesDir).filter(f => f.endsWith('.json'))
+    : [];
+
+  if (files.length === 0) {
+    console.log(`No .json files found in ${tablesDir}`);
+    process.exit(0);
+  }
+
+  const manifest = readManifest();
+  let hasChanges = false;
+
+  for (const filename of files) {
+    const filepath = path.join(tablesDir, filename);
+    const diff = diffDataTable(filepath, currentEnvName, manifest, env);
+    if (!diff) continue;
+
+    const label = `${filename} vs remote (env: ${currentEnvName})`;
+    if (diff.notFound) { console.log(`${filename}: not found on remote (not yet pushed)`); continue; }
+
+    const changed = diff.addedCols.length || diff.removedCols.length || diff.changedCols.length ||
+                    diff.addedRows.length || diff.removedRows.length || diff.changedRows.length;
+    if (!changed) { console.log(`${label}: up to date`); continue; }
+
+    hasChanges = true;
+    process.stdout.write(formatDataTableDiff(diff, label));
+  }
+
+  process.exit(hasChanges ? 1 : 0);
+}
+
+// data-table diff <file>
+if (args[0] === 'data-table' && args[1] === 'diff') {
+  const file = args[2];
+  if (!file) {
+    console.error('Usage: n8n-cli data-table diff <file>\n       n8n-cli data-table diff --all [--dir <path>]');
+    process.exit(1);
+  }
+  const manifest = readManifest();
+  const diff = diffDataTable(file, currentEnvName, manifest, env);
+  if (!diff) process.exit(1);
+
+  const filename = path.basename(file);
+  const label = `${filename} vs remote (env: ${currentEnvName})`;
+
+  if (diff.notFound) {
+    console.log(`${filename}: not found on remote (not yet pushed)`);
+    process.exit(0);
+  }
+
+  const hasChanges = diff.addedCols.length || diff.removedCols.length || diff.changedCols.length ||
+                     diff.addedRows.length || diff.removedRows.length || diff.changedRows.length;
+  if (!hasChanges) { console.log(`${label}: up to date`); process.exit(0); }
+
+  process.stdout.write(formatDataTableDiff(diff, label));
+  process.exit(1);
 }
 
 // credential --help

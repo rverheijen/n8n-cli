@@ -39,6 +39,13 @@ import {
   readCredentialsFile,
   writeCredentialsFile,
 } from '../lib/credential.js';
+import {
+  DEFAULT_TAGS_FILE,
+  pullTags,
+  pushTags,
+  readTagsFile,
+  writeTagsFile,
+} from '../lib/tag.js';
 
 // --- Bootstrap ---
 
@@ -56,6 +63,7 @@ const workflowsDir    = dir ?? DEFAULT_WORKFLOWS_DIR;
 const tablesDir       = dir ?? DEFAULT_DATA_TABLES_DIR;
 const variablesFile   = dir ?? DEFAULT_VARIABLES_FILE;
 const credentialsFile = dir ?? DEFAULT_CREDENTIALS_FILE;
+const tagsFile        = dir ?? DEFAULT_TAGS_FILE;
 
 // --- Helpers ---
 
@@ -314,6 +322,37 @@ const CREDENTIAL_HELP = {
   ],
 };
 
+const TAG_HELP = {
+  pull: [
+    'Fetch all tags from the instance and save to tags.json',
+    '',
+    'USAGE',
+    `  $ n8n-cli tag pull [--dir <path>]`,
+    '',
+    'FLAGS',
+    `  --dir <path>       Target file  (default: ./${DEFAULT_TAGS_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+  ],
+  push: [
+    'Push tags to the instance (create missing, skip existing)',
+    '',
+    'USAGE',
+    '  $ n8n-cli tag push [<file>]',
+    `  $ n8n-cli tag push [--dir <path>]`,
+    '',
+    'FLAGS',
+    `  --dir <path>       Source file  (default: ./${DEFAULT_TAGS_FILE})`,
+    '  --env <name>       Environment name',
+    '  --env-file <path>  Load a specific .env file',
+    '',
+    'DESCRIPTION',
+    '  Reads tag names from tags.json (or <file> if given). Creates any tags',
+    '  that do not exist on the instance yet. Skips tags that already exist.',
+    '  Does not delete or rename tags.',
+  ],
+};
+
 // --- Command routing ---
 
 // top-level --help / -h / no args
@@ -329,6 +368,7 @@ if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     `  variable pull/push                 Sync instance variables\n` +
     `  data-table pull/push               Sync data tables\n` +
     `  credential pull/push/map           Manage credential metadata and ID mapping\n` +
+    `  tag pull/push                      Sync tags\n` +
     `  execution list/get                 List or inspect executions (--workflow accepts filename)\n` +
     '\n',
   );
@@ -763,6 +803,48 @@ if (args[0] === 'credential' && args[1] === 'map') {
   if (!result) process.exit(1);
   console.log(`\n${result.matched} matched, ${result.unmatched} unmatched`);
   process.exit(0);
+}
+
+// tag --help
+if (args[0] === 'tag' && (args[1] === '--help' || args[1] === '-h')) {
+  const result = runCli(args, env);
+  process.stdout.write(result.stdout);
+  process.stdout.write(
+    'CUSTOM COMMANDS\n' +
+    `  tag pull           Fetch all tags and save to ./${DEFAULT_TAGS_FILE}\n` +
+    `  tag push [<file>]  Push tags from file (default: ./${DEFAULT_TAGS_FILE})\n`,
+  );
+  process.exit(result.status ?? 0);
+}
+
+// tag pull/push --help
+if (args[0] === 'tag' && TAG_HELP[args[1]] &&
+    (args.includes('--help') || args.includes('-h'))) {
+  console.log(TAG_HELP[args[1]].join('\n'));
+  process.exit(0);
+}
+
+// tag pull
+if (args[0] === 'tag' && args[1] === 'pull') {
+  console.log('Fetching tags...');
+  const tags = pullTags(env);
+  if (!tags) process.exit(1);
+  const filepath = tagsFile === DEFAULT_TAGS_FILE ? DEFAULT_TAGS_FILE : tagsFile;
+  writeTagsFile(filepath, tags);
+  console.log(`Saved ${tags.length} tag(s) to ${filepath}`);
+  process.exit(0);
+}
+
+// tag push
+if (args[0] === 'tag' && args[1] === 'push') {
+  const file     = args[2] && !args[2].startsWith('--') ? args[2] : null;
+  const filepath = file ?? (tagsFile === DEFAULT_TAGS_FILE ? DEFAULT_TAGS_FILE : tagsFile);
+  const tags     = readTagsFile(filepath);
+  console.log(`Pushing ${tags.length} tag(s) to env: ${currentEnvName}\n`);
+  const result = pushTags(tags, env);
+  if (!result) process.exit(1);
+  console.log(`\n${result.created} created, ${result.skipped} skipped${result.failed > 0 ? `, ${result.failed} failed` : ''}`);
+  process.exit(result.failed > 0 ? 1 : 0);
 }
 
 // execution --help: add note about --workflow accepting filenames

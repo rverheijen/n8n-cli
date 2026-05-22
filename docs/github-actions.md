@@ -44,6 +44,7 @@ your-project/
 │   ├── data-tables/
 │   │   └── settings.json           schema + seed rows for each data table
 │   ├── variables.json              instance variables (key/value pairs)
+│   ├── tags.json                   tag names used across workflows
 │   ├── credentials.json            credential metadata (id, name, type — no secrets)
 │   ├── n8n-cli.manifest.json       tracks workflow + data-table IDs per environment
 │   └── n8n-cli.mapping.json        credential ID mapping per environment
@@ -349,6 +350,12 @@ jobs:
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli
 
+      - name: Push tags
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli tag push
+
       - name: Push variables
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
@@ -424,6 +431,12 @@ jobs:
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli
 
+      - name: Push tags to ${{ matrix.client }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli tag push --env ${{ matrix.client }}
+
       - name: Push variables to ${{ matrix.client }}
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
@@ -462,6 +475,7 @@ jobs:
 n8n-cli workflow pull --all
 n8n-cli variable pull
 n8n-cli data-table pull --all
+n8n-cli tag pull
 n8n-cli credential pull
 
 # Set up credential mapping for each target environment

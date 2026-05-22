@@ -44,6 +44,8 @@ npm uninstall -g n8n-cli
 | `credential pull` | Fetch credential metadata (no secrets) |
 | `credential push [<file>]` | Create credential stubs on target and update mapping |
 | `credential map [<file>]` | Match credentials by name and type, update mapping |
+| `tag pull` | Fetch all tags |
+| `tag push [<file>]` | Create missing tags on the instance |
 | `execution list` | List executions (`--workflow` accepts a filename) |
 | `execution get <id>` | Get details for a single execution |
 
@@ -351,6 +353,38 @@ n8n-cli credential map --env client-a
 ```
 
 Use this when credentials already exist on both instances and you just need to link the IDs.
+
+---
+
+## Tag commands
+
+Tags are stored in `n8n/tags.json` as a flat list:
+
+```json
+[
+  { "id": "tag-abc", "name": "production" },
+  { "id": "tag-def", "name": "SAP S/4HANA" }
+]
+```
+
+### `tag pull`
+
+Fetch all tags from the instance and save to `n8n/tags.json`.
+
+```bash
+n8n-cli tag pull
+n8n-cli tag pull --env staging
+```
+
+### `tag push [<file>]`
+
+Push tags to the instance. Creates any tag that does not exist yet. Skips tags that already exist. Does not delete or rename tags.
+
+```bash
+n8n-cli tag push
+n8n-cli tag push --env client-a
+n8n-cli tag push path/to/tags.json --env client-a
+```
 
 ---
 

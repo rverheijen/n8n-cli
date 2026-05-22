@@ -308,7 +308,7 @@ Each data table is stored as a JSON file in `n8n/data-tables/` with its schema a
 
 ```json
 {
-  "name": "settings",
+  "name": "my_data_table",
   "columns": [
     { "name": "key",   "type": "string" },
     { "name": "value", "type": "string" }

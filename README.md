@@ -132,9 +132,9 @@ n8n-cli workflow pull --all --env staging
 Push a workflow file to the instance. Creates a new workflow on first push to an environment, updates it on subsequent pushes.
 
 ```bash
-n8n-cli workflow push n8n/workflows/1234.json
-n8n-cli workflow push n8n/workflows/1234.json --env staging
-n8n-cli workflow push n8n/workflows/1234.json --activate
+n8n-cli workflow push n8n/workflows/invoice_processing.json
+n8n-cli workflow push n8n/workflows/invoice_processing.json --env staging
+n8n-cli workflow push n8n/workflows/invoice_processing.json --activate
 ```
 
 Pass `--activate` to activate the workflow after pushing. Only workflows that have `"active": true` in the local JSON are activated. Sub-workflows and manual-trigger workflows that were inactive when pulled are left inactive.
@@ -160,7 +160,7 @@ n8n-cli workflow push --all --activate --prune
 Validate a workflow JSON file. Checks for required fields (`name`, `nodes`, `connections`). Exits `1` on failure, useful as a CI gate on pull requests.
 
 ```bash
-n8n-cli workflow validate n8n/workflows/1234.json
+n8n-cli workflow validate n8n/workflows/invoice_processing.json
 ```
 
 ### `workflow diff <file>`
@@ -345,8 +345,8 @@ n8n-cli data-table pull --all --env staging
 Push a data table file. Creates the table if it doesn't exist, then upserts all rows.
 
 ```bash
-n8n-cli data-table push n8n/data-tables/settings.json
-n8n-cli data-table push n8n/data-tables/settings.json --env instance-a
+n8n-cli data-table push n8n/data-tables/my_settings.json
+n8n-cli data-table push n8n/data-tables/my_settings.json --env instance-a
 ```
 
 ### `data-table push --all`

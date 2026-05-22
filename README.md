@@ -36,7 +36,7 @@ This installs the official skill and extends it with all wrapper commands so you
 | Command | Description |
 |---|---|
 | `workflow pull <id>` | Fetch a workflow by ID and save to `n8n/workflows/<name>.json` |
-| `workflow pull --all` | Fetch all workflows, rename local files if the workflow name changed |
+| `workflow pull --all [--existing]` | Fetch all workflows, rename local files if the workflow name changed |
 | `workflow push <file>` | Push a workflow file (create or update) |
 | `workflow push --all` | Push all workflows in the source directory |
 | `workflow validate <file>` | Validate a workflow JSON file |
@@ -49,7 +49,7 @@ This installs the official skill and extends it with all wrapper commands so you
 | `variable push [<file>]` | Push variables (create or update) |
 | `variable diff [<file>]` | Compare local variables against remote |
 | `data-table pull <name>` | Fetch a data table by name and save to `n8n/data-tables/<name>.json` |
-| `data-table pull --all` | Fetch all data tables, rename local files if the table name changed |
+| `data-table pull --all [--existing]` | Fetch all data tables, rename local files if the table name changed |
 | `data-table push <file>` | Push a data table file |
 | `data-table push --all` | Push all data tables in the source directory |
 | `data-table diff <file>` | Compare a local data table against remote |

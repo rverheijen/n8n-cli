@@ -1,7 +1,7 @@
 
 ## Wrapper Commands
 
-This installation is a custom wrapper that adds CI/CD commands on top of the official n8n CLI. All official commands still work unchanged.
+This installation is a custom wrapper that adds CI/CD commands on top of the official n8n CLI. All official commands still work unchanged. Supported agents: Claude Code, OpenCode, Cursor, Windsurf.
 
 ### Environment and .env Files
 

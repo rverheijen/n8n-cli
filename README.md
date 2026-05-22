@@ -495,12 +495,12 @@ n8n-cli tag push --prune --env instance-a
 ```json
 {
   "default": {
-    "workflows":    { "1234.json": "wf-abc" },
-    "data-tables":  { "settings.json": "dt-xyz" }
+    "workflows":   { "my_workflow.json": "wf-abc" },
+    "data-tables": { "my_data_table.json": "dt-xyz" }
   },
   "instance-a": {
-    "workflows":    { "1234.json": "wf-def" },
-    "data-tables":  { "settings.json": "dt-uvw" }
+    "workflows":   { "my_workflow.json": "wf-def" },
+    "data-tables": { "my_data_table.json": "dt-uvw" }
   }
 }
 ```

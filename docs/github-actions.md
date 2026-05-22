@@ -481,6 +481,199 @@ jobs:
 
 ---
 
+### CD: Promote through sandbox, QA, and production
+
+**`.github/workflows/cd-promote.yml`**
+
+Deploys sequentially through three environments on merge to `main`. Each environment is gated by the previous one. Production requires manual approval via a GitHub Environment protection rule.
+
+**Setup:**
+1. Create three GitHub Environments: `sandbox`, `qa`, `production` (**Settings → Environments**)
+2. Add `N8N_API_URL` and `N8N_API_KEY` secrets to each
+3. On the `production` environment, enable **Required reviewers** to add a manual approval gate
+
+```yaml
+name: Promote to production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'n8n/workflows/**.json'
+      - 'n8n/data-tables/**.json'
+      - 'n8n/variables.json'
+  workflow_dispatch:
+
+jobs:
+  deploy-sandbox:
+    name: Deploy to sandbox
+    environment: sandbox
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
+
+      - name: Push tags
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli tag push --env sandbox
+
+      - name: Push variables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli variable push --env sandbox
+
+      - name: Push data tables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli data-table push --all --env sandbox
+
+      - name: Push workflows
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli workflow push --all --activate --env sandbox
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add n8n/n8n-cli.manifest.json
+          git diff --staged --quiet || git commit -m "chore: update manifest [sandbox] [skip ci]"
+          git push
+
+  deploy-qa:
+    name: Deploy to QA
+    needs: deploy-sandbox
+    environment: qa
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
+
+      - name: Push tags
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli tag push --env qa
+
+      - name: Push variables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli variable push --env qa
+
+      - name: Push data tables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli data-table push --all --env qa
+
+      - name: Push workflows
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli workflow push --all --activate --env qa
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add n8n/n8n-cli.manifest.json
+          git diff --staged --quiet || git commit -m "chore: update manifest [qa] [skip ci]"
+          git push
+
+  deploy-production:
+    name: Deploy to production
+    needs: deploy-qa
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
+
+      - name: Push tags
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli tag push --env production
+
+      - name: Push variables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli variable push --env production
+
+      - name: Push data tables
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli data-table push --all --env production
+
+      - name: Push workflows
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli workflow push --all --activate --env production
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add n8n/n8n-cli.manifest.json
+          git diff --staged --quiet || git commit -m "chore: update manifest [production] [skip ci]"
+          git push
+```
+
+The `needs:` keyword enforces the promotion order: sandbox must pass before QA runs, and QA must pass before production is attempted. With **Required reviewers** set on the `production` environment, GitHub pauses the pipeline and waits for manual approval before the production job starts.
+
+The manifest grows one section per environment:
+
+```json
+{
+  "sandbox":    { "workflows": { "my-workflow.json": "wf-abc" } },
+  "qa":         { "workflows": { "my-workflow.json": "wf-def" } },
+  "production": { "workflows": { "my-workflow.json": "wf-xyz" } }
+}
+```
+
+Set up credential mapping for each environment once before the first deployment:
+
+```bash
+n8n-cli credential pull
+n8n-cli credential map --env sandbox
+n8n-cli credential map --env qa
+n8n-cli credential map --env production
+```
+
+---
+
 ## Local development workflow
 
 ```bash

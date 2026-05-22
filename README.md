@@ -18,7 +18,7 @@ Installs both this wrapper and the official `@n8n/cli` in one step. After instal
 npm uninstall -g n8n-cli
 ```
 
-## AI coding agent skill
+## Use as skill with your coding agent
 
 Run this after installation to add the n8n-cli skill to your AI coding agent (Claude Code, Cursor, Windsurf):
 

@@ -323,6 +323,14 @@ Credential metadata is stored in `n8n/credentials.json` as a flat list. Credenti
 ]
 ```
 
+When `--dir` points to a directory (no `.json` extension), each credential is stored in its own file instead:
+
+```
+n8n/credentials/
+  postgres_production.json
+  slack_bot.json
+```
+
 ### `credential pull`
 
 Fetch all credentials from the instance and save metadata to `n8n/credentials.json`.
@@ -330,6 +338,7 @@ Fetch all credentials from the instance and save metadata to `n8n/credentials.js
 ```bash
 n8n-cli credential pull
 n8n-cli credential pull --env staging
+n8n-cli credential pull --dir n8n/credentials   # one file per credential
 ```
 
 ### `credential push [<file>]`
@@ -339,6 +348,7 @@ Create empty credential stubs on a target instance for each entry in `credential
 ```bash
 n8n-cli credential push --env client-a
 n8n-cli credential push path/to/credentials.json --env client-a
+n8n-cli credential push --dir n8n/credentials --env client-a
 ```
 
 After pushing, fill in the actual credential values on the target instance.
@@ -349,6 +359,7 @@ Match credentials that already exist on both instances by name and type, and wri
 
 ```bash
 n8n-cli credential map --env client-a
+n8n-cli credential map --dir n8n/credentials --env client-a
 ```
 
 Use this when credentials already exist on both instances and you just need to link the IDs.
@@ -366,6 +377,14 @@ Tags are stored in `n8n/tags.json` as a flat list:
 ]
 ```
 
+When `--dir` points to a directory (no `.json` extension), each tag is stored in its own file instead:
+
+```
+n8n/tags/
+  production.json
+  sap_s_4hana.json
+```
+
 ### `tag pull`
 
 Fetch all tags from the instance and save to `n8n/tags.json`.
@@ -373,6 +392,7 @@ Fetch all tags from the instance and save to `n8n/tags.json`.
 ```bash
 n8n-cli tag pull
 n8n-cli tag pull --env staging
+n8n-cli tag pull --dir n8n/tags   # one file per tag
 ```
 
 ### `tag push [<file>]`
@@ -383,6 +403,7 @@ Push tags to the instance. Creates any tag that does not exist yet. Skips tags t
 n8n-cli tag push
 n8n-cli tag push --env client-a
 n8n-cli tag push path/to/tags.json --env client-a
+n8n-cli tag push --dir n8n/tags --env client-a
 ```
 
 ---

@@ -15,13 +15,30 @@ Developer pushes code
      │  ├── workflows/       │                    │  └─ Changed workflow files │
      │  ├── data-tables/     │                    └────────────────────────────┘
      │  ├── variables.json   │   Merge to main    ┌────────────────────────────┐
-     │  └── manifest.json    │───────────────────►│  CD: deploy                │
+     │  └── manifest.json    │───────────────────►│  CD: sandbox               │
      └───────────────────────┘                    │  1. variable push          │
                  ▲                                │  2. data-table push        │
                  │                                │  3. workflow push --all    │
-                 │                                └────────────────────────────┘
-                 └───────────────────────────────────────┘
-                          manifest committed back
+                 │                                └──────────────┬─────────────┘
+                 │                                               │ passes
+                 │                                               ▼
+                 │                                ┌────────────────────────────┐
+                 │                                │  CD: QA                    │
+                 │                                │  1. variable push          │
+                 │                                │  2. data-table push        │
+                 │                                │  3. workflow push --all    │
+                 │                                └──────────────┬─────────────┘
+                 │                                               │ approved
+                 │                                               ▼
+                 │                                ┌────────────────────────────┐
+                 │                                │  CD: production            │
+                 │                                │  1. variable push          │
+                 │                                │  2. data-table push        │
+                 │                                │  3. workflow push --all    │
+                 │                                └──────────────┬─────────────┘
+                 │                                               │
+                 └───────────────────────────────────────────────┘
+                                   manifest committed back
 ```
 
 Deployment order matters: variables and data tables are pushed first so workflows can reference them at runtime.

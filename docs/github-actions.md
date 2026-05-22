@@ -211,7 +211,7 @@ n8n-cli variable pull --env instance-a
 n8n-cli variable push
 n8n-cli variable push --env instance-a
 n8n-cli variable push --prune
-n8n-cli variable push path/to/vars.json --env instance-a
+n8n-cli variable push n8n/variables.json --env instance-a
 
 n8n-cli variable diff
 n8n-cli variable diff --env instance-a
@@ -251,15 +251,15 @@ Each file in `n8n/data-tables/` defines one data table with its columns and seed
 | `data-table diff --all` | Compare all local data tables against remote |
 
 ```bash
-n8n-cli data-table pull settings
+n8n-cli data-table pull my_data_table
 n8n-cli data-table pull --all
 
-n8n-cli data-table push n8n/data-tables/settings.json
+n8n-cli data-table push n8n/data-tables/my_data_table.json
 n8n-cli data-table push --all
 n8n-cli data-table push --all --env instance-a
 n8n-cli data-table push --all --prune
 
-n8n-cli data-table diff n8n/data-tables/settings.json
+n8n-cli data-table diff n8n/data-tables/my_data_table.json
 n8n-cli data-table diff --all
 ```
 

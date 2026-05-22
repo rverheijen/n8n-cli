@@ -36,10 +36,13 @@ npm uninstall -g n8n-cli
 | `workflow test <file>` | Trigger a workflow webhook and report the result |
 | `variable pull` | Fetch all variables |
 | `variable push [<file>]` | Push variables (create or update) |
+| `variable diff [<file>]` | Compare local variables against remote |
 | `data-table pull <name>` | Fetch a data table by name |
 | `data-table pull --all` | Fetch all data tables |
 | `data-table push <file>` | Push a data table file |
 | `data-table push --all` | Push all data tables in the source directory |
+| `data-table diff <file>` | Compare a local data table against remote |
+| `data-table diff --all` | Compare all local data tables against remote |
 | `credential pull` | Fetch credential metadata (no secrets) |
 | `credential push [<file>]` | Create credential stubs on target and update mapping |
 | `credential map` | Match credentials by name and type, update mapping |
@@ -120,7 +123,10 @@ Push a workflow file to the instance. Creates a new workflow on first push to an
 ```bash
 n8n-cli workflow push n8n/workflows/1234.json
 n8n-cli workflow push n8n/workflows/1234.json --env staging
+n8n-cli workflow push n8n/workflows/1234.json --activate
 ```
+
+Pass `--activate` to activate the workflow after pushing. Only workflows that have `"active": true` in the local JSON are activated — sub-workflows and manual-trigger workflows that were inactive when pulled are left inactive.
 
 ### `workflow push --all`
 
@@ -129,7 +135,14 @@ Push all `.json` files from `n8n/workflows/` to the instance.
 ```bash
 n8n-cli workflow push --all
 n8n-cli workflow push --all --env client-a
+n8n-cli workflow push --all --activate
+n8n-cli workflow push --all --activate --prune
 ```
+
+| Flag | Description |
+|---|---|
+| `--activate` | Activate each workflow after push if `active: true` in the local file |
+| `--prune` | Delete remote workflows in the manifest whose local file no longer exists |
 
 ### `workflow validate <file>`
 
@@ -244,12 +257,36 @@ n8n-cli variable pull --env staging
 
 ### `variable push [<file>]`
 
-Push variables to the instance. Creates missing variables, updates existing ones. Does not delete variables not in the file.
+Push variables to the instance. Creates missing variables, updates existing ones.
 
 ```bash
 n8n-cli variable push
 n8n-cli variable push --env client-a
 n8n-cli variable push path/to/vars.json --env client-a
+n8n-cli variable push --prune
+```
+
+Pass `--prune` to also delete remote variables not present in the local file.
+
+### `variable diff [<file>]`
+
+Compare local variables against the remote instance. Shows variables that would be created, deleted, or updated by push.
+
+```bash
+n8n-cli variable diff
+n8n-cli variable diff --env staging
+```
+
+Exits `1` if differences are found, `0` if up to date.
+
+Example output:
+
+```
+variables.json vs remote (env: staging)
+
+  + NEW_KEY
+  - STALE_KEY
+  ~ RETRY_LIMIT: "3" -> "5"
 ```
 
 ---
@@ -308,7 +345,30 @@ Push all data table files from `n8n/data-tables/`.
 ```bash
 n8n-cli data-table push --all
 n8n-cli data-table push --all --env client-a
+n8n-cli data-table push --all --prune
 ```
+
+Pass `--prune` to also delete remote tables tracked in the manifest whose local file no longer exists.
+
+### `data-table diff <file>`
+
+Compare a local data table file against the remote version. Shows column and row-level changes by `upsertKey`.
+
+```bash
+n8n-cli data-table diff n8n/data-tables/settings.json
+n8n-cli data-table diff n8n/data-tables/settings.json --env staging
+```
+
+### `data-table diff --all`
+
+Diff all local data table files against remote.
+
+```bash
+n8n-cli data-table diff --all
+n8n-cli data-table diff --all --env staging
+```
+
+Exits `1` if any differences are found, `0` if all up to date.
 
 ---
 

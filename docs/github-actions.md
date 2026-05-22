@@ -6,21 +6,21 @@ This guide explains how to use `n8n-cli` with GitHub Actions to validate, deploy
 
 ## How it works
 
-```
+```text
 Developer pushes code
         │
         ▼
-┌─────────────────────┐   PR opened    ┌──────────────────────────┐
-│  Git repo           │ ─────────────► │  CI: validate            │
-│  n8n/               │                │  Changed workflow files   │
-│  ├── workflows/     │                └──────────────────────────┘
-│  ├── data-tables/   │
-│  ├── variables.json │   Merge to main  ┌──────────────────────────┐
-│  └── manifest.json  │ ───────────────► │  CD: deploy              │
-└─────────────────────┘                  │  1. variable push        │
-        ▲                                │  2. data-table push      │
-        │                                │  3. workflow push --all  │
-        └────────────────────────────────┘
+┌──────────────────────────────┐   PR opened    ┌──────────────────────────┐
+│  Git repo                    │ ─────────────► │  CI: validate            │
+│  n8n/                        │                │  Changed workflow files   │
+│  ├── workflows/              │                └──────────────────────────┘
+│  ├── data-tables/            │
+│  ├── variables.json          │   Merge to main  ┌──────────────────────────┐
+│  └── n8n-cli.manifest.json   │ ───────────────► │  CD: deploy              │
+└──────────────────────────────┘                  │  1. variable push        │
+        ▲                                         │  2. data-table push      │
+        │                                         │  3. workflow push --all  │
+        └─────────────────────────────────────────┘
                   manifest committed back
 ```
 
@@ -30,7 +30,7 @@ Deployment order matters: variables and data tables are pushed first so workflow
 
 ## Recommended repo structure
 
-```
+```text
 your-project/
 ├── .github/
 │   └── workflows/

@@ -35,8 +35,8 @@ This installs the official skill and extends it with all wrapper commands so you
 
 | Command | Description |
 |---|---|
-| `workflow pull <id>` | Fetch a workflow by ID and save to `n8n/workflows/<id>.json` |
-| `workflow pull --all` | Fetch all workflows |
+| `workflow pull <id>` | Fetch a workflow by ID and save to `n8n/workflows/<name>.json` |
+| `workflow pull --all` | Fetch all workflows, rename local files if the workflow name changed |
 | `workflow push <file>` | Push a workflow file (create or update) |
 | `workflow push --all` | Push all workflows in the source directory |
 | `workflow validate <file>` | Validate a workflow JSON file |
@@ -111,7 +111,7 @@ These flags apply to all custom commands and are stripped before passing to the 
 
 ### `workflow pull <id>`
 
-Fetch a single workflow by ID and save it to `n8n/workflows/<id>.json`.
+Fetch a single workflow by ID and save it to `n8n/workflows/<name>.json` (slugified from the workflow name). If the workflow was previously pulled under a different name, the local file is renamed automatically and the manifest is updated.
 
 ```bash
 n8n-cli workflow pull 1234
@@ -120,7 +120,7 @@ n8n-cli workflow pull 1234 --env staging
 
 ### `workflow pull --all`
 
-Fetch all workflows from the instance and save each to `n8n/workflows/<id>.json`.
+Fetch all workflows from the instance and save each to `n8n/workflows/<name>.json`. Workflows that were renamed on the remote are renamed locally and reflected in the manifest.
 
 ```bash
 n8n-cli workflow pull --all

@@ -10,6 +10,7 @@ import { readMapping } from '../lib/mapping.js';
 import { diffWorkflows, formatDiff } from '../lib/diff.js';
 import {
   DEFAULT_WORKFLOWS_DIR,
+  slugifyName,
   pushWorkflow,
   pullWorkflow,
   pullAllWorkflows,
@@ -565,7 +566,10 @@ if (args[0] === 'workflow' && args[1] === 'deactivate') {
 
 // workflow pull --all
 if (args[0] === 'workflow' && args[1] === 'pull' && all) {
-  process.exit(pullAllWorkflows(workflowsDir, env) ? 0 : 1);
+  const manifest = readManifest();
+  const ok = pullAllWorkflows(workflowsDir, currentEnvName, manifest, env);
+  writeManifest(manifest);
+  process.exit(ok ? 0 : 1);
 }
 
 // workflow pull <id>
@@ -575,14 +579,29 @@ if (args[0] === 'workflow' && args[1] === 'pull') {
     console.error('Usage: n8n-cli workflow pull <id>\n       n8n-cli workflow pull --all [--dir <path>]');
     process.exit(1);
   }
-  const filename = `${workflowId}.json`;
+  const workflow = pullWorkflow(workflowId, env);
+  if (!workflow) process.exit(1);
+
+  const slug = slugifyName(workflow.name);
+  const newFilename = `${slug}.json`;
+  const manifest = readManifest();
+  const manifestSection = (manifest[currentEnvName] ??= {}).workflows ??= {};
+  const existingFilename = Object.keys(manifestSection).find(f => String(manifestSection[f]) === String(workflowId));
+
   fs.mkdirSync(workflowsDir, { recursive: true });
-  const filepath = path.join(workflowsDir, filename);
-  if (pullWorkflow(workflowId, filepath, env)) {
-    console.log(`Saved to ${filepath}`);
-    process.exit(0);
+
+  if (existingFilename && existingFilename !== newFilename) {
+    const oldPath = path.join(workflowsDir, existingFilename);
+    if (fs.existsSync(oldPath)) fs.renameSync(oldPath, path.join(workflowsDir, newFilename));
+    delete manifestSection[existingFilename];
+    console.log(`Renamed  ${existingFilename} -> ${newFilename}`);
   }
-  process.exit(1);
+
+  manifestSection[newFilename] = String(workflowId);
+  fs.writeFileSync(path.join(workflowsDir, newFilename), JSON.stringify(workflow, null, 2) + '\n');
+  writeManifest(manifest);
+  console.log(`Saved to ${path.join(workflowsDir, newFilename)}`);
+  process.exit(0);
 }
 
 // workflow push --all

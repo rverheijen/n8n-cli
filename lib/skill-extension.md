@@ -93,3 +93,14 @@ n8n-cli tag pull --dir n8n/tags                  # one file per tag
 n8n-cli tag push
 n8n-cli tag push --prune                         # also delete remote-only tags (removes from all workflows)
 ```
+
+### Execution Commands
+
+`--workflow` accepts a local filename and resolves it to the remote ID via the manifest.
+
+```bash
+n8n-cli execution list
+n8n-cli execution list --workflow n8n/workflows/my_workflow.json --status error
+n8n-cli execution get <id>
+n8n-cli execution get <id> --includeData --json
+```

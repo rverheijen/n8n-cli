@@ -135,11 +135,12 @@ Use `credential map` to match by name and type:
 
 ```bash
 # Pull credential metadata from the source instance first
-n8n-cli credential pull
+n8n-cli credential pull                            # single-file mode
+n8n-cli credential pull --dir n8n/credentials     # one file per credential
 
 # Match against target by name+type and write the mapping
 n8n-cli credential map --env instance-a
-n8n-cli credential map --env instance-b
+n8n-cli credential map --dir n8n/credentials --env instance-a   # if pulled with --dir
 ```
 
 ### Option B: Credentials don't exist on the target yet
@@ -148,11 +149,12 @@ Use `credential push` to create empty stubs and auto-populate the mapping:
 
 ```bash
 # Pull credential metadata from the source instance first
-n8n-cli credential pull
+n8n-cli credential pull                            # single-file mode
+n8n-cli credential pull --dir n8n/credentials     # one file per credential
 
 # Create stubs on target and write the mapping
 n8n-cli credential push --env instance-a
-n8n-cli credential push --env instance-b
+n8n-cli credential push --dir n8n/credentials --env instance-a   # if pulled with --dir
 ```
 
 Then fill in the actual credential values on each target instance.
@@ -278,17 +280,20 @@ n8n-cli data-table diff --all
 
 | Command | Description |
 |---|---|
-| `credential pull` | Fetch credential metadata from the instance |
-| `credential push [<file>]` | Create stubs on target and populate the mapping |
-| `credential map` | Match credentials by name+type and update mapping |
+| `credential pull [--dir <path>]` | Fetch credential metadata from the instance |
+| `credential push [<file>] [--dir <path>]` | Create stubs on target and populate the mapping |
+| `credential map [--dir <path>]` | Match credentials by name+type and update mapping |
 
 ```bash
 # Pull metadata from the source instance
 n8n-cli credential pull
+n8n-cli credential pull --dir n8n/credentials     # one file per credential
 
 # Set up the mapping for a target environment
-n8n-cli credential map --env instance-a      # if credentials already exist on target
-n8n-cli credential push --env instance-a     # if credentials need to be created on target
+n8n-cli credential map --env instance-a                        # if credentials already exist on target
+n8n-cli credential map --dir n8n/credentials --env instance-a  # from per-file directory
+n8n-cli credential push --env instance-a                       # if credentials need to be created on target
+n8n-cli credential push --dir n8n/credentials --env instance-a # from per-file directory
 ```
 
 See [Credential mapping](#credential-mapping) above for the full setup workflow.

@@ -79,10 +79,12 @@ n8n-cli data-table diff --all
 Credential values and secrets are never fetched or stored. Only id, name, and type.
 
 ```bash
-n8n-cli credential pull                           # save metadata to n8n/credentials.json
-n8n-cli credential pull --dir n8n/credentials    # one file per credential
-n8n-cli credential push --env instance-a           # create stubs and update mapping
-n8n-cli credential map --env instance-a            # match existing credentials by name+type
+n8n-cli credential pull                                         # save metadata to n8n/credentials.json
+n8n-cli credential pull --dir n8n/credentials                  # one file per credential
+n8n-cli credential push --env instance-a                        # create stubs and update mapping
+n8n-cli credential push --dir n8n/credentials --env instance-a # push from per-file directory
+n8n-cli credential map --env instance-a                         # match existing credentials by name+type
+n8n-cli credential map --dir n8n/credentials --env instance-a  # match from per-file directory
 ```
 
 ### Tag Commands

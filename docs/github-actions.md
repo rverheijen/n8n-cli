@@ -12,7 +12,7 @@ Developer pushes code
         ▼
 ┌──────────────────────────────┐   PR opened    ┌──────────────────────────┐
 │  Git repo                    │ ─────────────► │  CI: validate            │
-│  n8n/                        │                │  Changed workflow files   │
+│  n8n/                        │                │  Changed workflow files  │
 │  ├── workflows/              │                └──────────────────────────┘
 │  ├── data-tables/            │
 │  ├── variables.json          │   Merge to main  ┌──────────────────────────┐
@@ -20,8 +20,9 @@ Developer pushes code
 └──────────────────────────────┘                  │  1. variable push        │
         ▲                                         │  2. data-table push      │
         │                                         │  3. workflow push --all  │
-        └─────────────────────────────────────────┘
+        └─────────────────────────────────────────┘──────────────────────────┘
                   manifest committed back
+
 ```
 
 Deployment order matters: variables and data tables are pushed first so workflows can reference them at runtime.

@@ -414,7 +414,7 @@ n8n-cli credential pull --dir n8n/credentials   # one file per credential
 
 ### `credential push [<file>]`
 
-Create empty credential stubs on a target instance for each entry in `credentials.json`. Updates `n8n-cli.mapping.json` with the source->target ID mapping. Already-mapped credentials are skipped.
+Create empty credential stubs on a target instance for each entry in `credentials.json`. Updates `.n8n_cli/mapping.json` with the source->target ID mapping. Already-mapped credentials are skipped.
 
 ```bash
 n8n-cli credential push --env client-a
@@ -426,7 +426,7 @@ After pushing, fill in the actual credential values on the target instance.
 
 ### `credential map`
 
-Match credentials that already exist on both instances by name and type, and write the mapping to `n8n-cli.mapping.json`. No stubs are created.
+Match credentials that already exist on both instances by name and type, and write the mapping to `.n8n_cli/mapping.json`. No stubs are created.
 
 ```bash
 n8n-cli credential map --env client-a
@@ -490,7 +490,7 @@ n8n-cli tag push --prune --env client-a
 
 ## Deployment manifest
 
-`n8n/n8n-cli.manifest.json` tracks remote workflow and data table IDs per environment. Without it every push would create a new resource instead of updating the existing one.
+`.n8n_cli/manifest.json` tracks remote workflow and data table IDs per environment. Without it every push would create a new resource instead of updating the existing one.
 
 ```json
 {
@@ -513,7 +513,7 @@ n8n-cli tag push --prune --env client-a
 
 Workflow JSON files contain credential IDs that are instance-specific. When pushing the same workflow to different environments, those IDs must be remapped.
 
-Create `n8n/n8n-cli.mapping.json` and commit it (it contains only IDs, no secrets):
+Create `.n8n_cli/mapping.json` and commit it (it contains only IDs, no secrets):
 
 ```json
 {

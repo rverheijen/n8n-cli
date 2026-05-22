@@ -54,6 +54,9 @@ your-project/
 │       ├── ci.yml                  validate on pull request
 │       ├── cd.yml                  deploy to single instance on merge
 │       └── cd-clients.yml          deploy to multiple client instances on merge
+├── .n8n_cli/
+│   ├── manifest.json               tracks workflow + data-table IDs per environment
+│   └── mapping.json                credential ID mapping per environment
 ├── n8n/
 │   ├── workflows/
 │   │   ├── my-workflow.json
@@ -62,18 +65,16 @@ your-project/
 │   │   └── settings.json           schema + seed rows for each data table
 │   ├── variables.json              instance variables (key/value pairs)
 │   ├── tags.json                   tag names used across workflows
-│   ├── credentials.json            credential metadata (id, name, type — no secrets)
-│   ├── n8n-cli.manifest.json       tracks workflow + data-table IDs per environment
-│   └── n8n-cli.mapping.json        credential ID mapping per environment
+│   └── credentials.json            credential metadata (id, name, type — no secrets)
 ├── .env                            local dev (gitignored)
 ├── .env.client-a                   local targeting of client-a (gitignored)
 └── .gitignore
 ```
 
 **Commit to git:**
-- All files under `n8n/` except `.env*` files
-- `n8n-cli.manifest.json`: tracks remote IDs so subsequent deployments update instead of duplicate
-- `n8n-cli.mapping.json`: contains only credential IDs, no secrets
+- All files under `n8n/` and `.n8n_cli/`
+- `.n8n_cli/manifest.json`: tracks remote IDs so subsequent deployments update instead of duplicate
+- `.n8n_cli/mapping.json`: contains only credential IDs, no secrets
 - `credentials.json`: contains only credential metadata (id, name, type), no secrets
 
 **Never commit:**
@@ -95,7 +96,7 @@ Or install it globally in each workflow step (see the workflow examples below).
 
 ### 2. Enable write permissions for the manifest commit
 
-The CD workflows commit the updated `n8n-cli.manifest.json` back to the repo after each deployment. To allow this, go to:
+The CD workflows commit the updated `.n8n_cli/manifest.json` back to the repo after each deployment. To allow this, go to:
 
 **Settings → Actions → General → Workflow permissions**
 
@@ -124,7 +125,7 @@ Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targetin
 
 Workflow JSON files contain credential IDs that are instance-specific. When pushing the same workflow to different environments, those IDs need to be remapped.
 
-`n8n-cli` provides three commands to set up and maintain `n8n-cli.mapping.json`. Pick one based on whether the credentials already exist on the target:
+`n8n-cli` provides three commands to set up and maintain `.n8n_cli/mapping.json`. Pick one based on whether the credentials already exist on the target:
 
 ### Option A: Credentials already exist on both instances
 
@@ -156,7 +157,7 @@ Then fill in the actual credential values on each target instance.
 
 ### Option C: Manual mapping
 
-Edit `n8n/n8n-cli.mapping.json` directly:
+Edit `.n8n_cli/mapping.json` directly:
 
 ```json
 {
@@ -408,7 +409,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add n8n/n8n-cli.manifest.json
+          git add .n8n_cli/manifest.json
           git diff --staged --quiet || git commit -m "chore: update deployment manifest [skip ci]"
           git push
 ```
@@ -489,12 +490,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add n8n/n8n-cli.manifest.json
+          git add .n8n_cli/manifest.json
           git diff --staged --quiet || git commit -m "chore: update manifest [${{ matrix.client }}] [skip ci]"
           git push
 ```
 
-> **Why `max-parallel: 1`?** Each deploy job reads and writes the shared `n8n-cli.manifest.json`. Running them in parallel causes git push conflicts on the manifest commit. Running sequentially means each job picks up the manifest entries from the previous client.
+> **Why `max-parallel: 1`?** Each deploy job reads and writes the shared `.n8n_cli/manifest.json`. Running them in parallel causes git push conflicts on the manifest commit. Running sequentially means each job picks up the manifest entries from the previous client.
 
 ---
 
@@ -565,7 +566,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add n8n/n8n-cli.manifest.json
+          git add .n8n_cli/manifest.json
           git diff --staged --quiet || git commit -m "chore: update manifest [sandbox] [skip ci]"
           git push
 
@@ -614,7 +615,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add n8n/n8n-cli.manifest.json
+          git add .n8n_cli/manifest.json
           git diff --staged --quiet || git commit -m "chore: update manifest [quality_assurance] [skip ci]"
           git push
 
@@ -663,7 +664,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add n8n/n8n-cli.manifest.json
+          git add .n8n_cli/manifest.json
           git diff --staged --quiet || git commit -m "chore: update manifest [production] [skip ci]"
           git push
 ```
@@ -754,7 +755,7 @@ n8n-cli data-table push --all --env-file .env.client-a
    n8n-cli data-table push --all --env client-x
    n8n-cli workflow push --all --env client-x
    ```
-6. Commit the updated `n8n-cli.manifest.json` and `n8n-cli.mapping.json`.
+6. Commit the updated `.n8n_cli/manifest.json` and `.n8n_cli/mapping.json`.
 
 From this point on, GitHub Actions handles deployments on every push to main.
 
@@ -803,7 +804,7 @@ To add an environment to the sandbox → quality_assurance → production pipeli
          run: |
            git config user.name "github-actions[bot]"
            git config user.email "github-actions[bot]@users.noreply.github.com"
-           git add n8n/n8n-cli.manifest.json
+           git add .n8n_cli/manifest.json
            git diff --staged --quiet || git commit -m "chore: update manifest [staging] [skip ci]"
            git push
    ```
@@ -823,7 +824,7 @@ To add an environment to the sandbox → quality_assurance → production pipeli
    n8n-cli data-table push --all --env staging
    n8n-cli workflow push --all --env staging
    ```
-6. Commit the updated `n8n-cli.manifest.json` and `n8n-cli.mapping.json`.
+6. Commit the updated `.n8n_cli/manifest.json` and `.n8n_cli/mapping.json`.
 
 ---
 
@@ -836,13 +837,13 @@ The test webhook URL only works when the workflow is active and you have opened 
 Run `workflow diff` to see what changed, then either pull the remote version (`workflow pull <id>`) or push the git version back (`workflow push <file>`).
 
 **Workflows are being created as duplicates instead of updated**
-The manifest (`n8n/n8n-cli.manifest.json`) is either missing or doesn't have an entry for that environment. Run `workflow push` once locally with the correct `--env` flag to populate the manifest, then commit it.
+The manifest (`.n8n_cli/manifest.json`) is either missing or doesn't have an entry for that environment. Run `workflow push` once locally with the correct `--env` flag to populate the manifest, then commit it.
 
 **Tags are missing after deployment**
 Tags are resolved by name on the target. If a tag doesn't exist it gets created. If you see this issue, check that the workflow JSON includes tag names (not just IDs); workflows pulled via `workflow pull` always include both.
 
 **Credential warnings during workflow push**
-A warning means a credential ID in the workflow JSON has no mapping for the target environment. Add the mapping to `n8n/n8n-cli.mapping.json`. The workflow is still pushed, but the credential reference will be incorrect until the mapping is added.
+A warning means a credential ID in the workflow JSON has no mapping for the target environment. Add the mapping to `.n8n_cli/mapping.json`. The workflow is still pushed, but the credential reference will be incorrect until the mapping is added.
 
 **`Error: env file not found`**
 You used `--env-file .env.client-a` but the file doesn't exist. Either create the file or use `--env client-a` (which only requires the file if it exists, and falls back to shell env vars).

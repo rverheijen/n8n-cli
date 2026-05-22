@@ -16,11 +16,11 @@ Shell variables always take precedence over .env values.
 
 ### Deployment Manifest
 
-`n8n/n8n-cli.manifest.json` tracks remote workflow and data table IDs per environment. It is created/updated on every push. Commit it to git.
+`.n8n_cli/manifest.json` tracks remote workflow and data table IDs per environment. It is created/updated on every push. Commit it to git.
 
 ### Credential Mapping
 
-`n8n/n8n-cli.mapping.json` maps source credential IDs to target IDs per environment. Commit it to git (contains only IDs, no secrets).
+`.n8n_cli/mapping.json` maps source credential IDs to target IDs per environment. Commit it to git (contains only IDs, no secrets).
 
 ### Workflow Commands
 

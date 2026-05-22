@@ -327,8 +327,8 @@ Each data table is stored as a JSON file in `n8n/data-tables/` with its schema a
 Fetch a single data table by name and save to `n8n/data-tables/<name>.json` (slugified). If the table was previously pulled under a different name, the local file is renamed automatically and the manifest is updated.
 
 ```bash
-n8n-cli data-table pull settings
-n8n-cli data-table pull settings --env staging
+n8n-cli data-table pull my_data_table
+n8n-cli data-table pull my_data_table --env staging
 ```
 
 ### `data-table pull --all`

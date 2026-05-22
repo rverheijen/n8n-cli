@@ -12,7 +12,7 @@ Developer pushes code
                  ▼
      ┌───────────────────────┐    PR opened       ┌────────────────────────────┐
      │  Git repo (n8n/)      │───────────────────►│  CI: validate              │
-     │  ├── workflows/       │                    │  └─ Changed workflow files │
+     │  ├── workflows/       │                    │  └─ changed workflow files │
      │  ├── data-tables/     │                    └────────────────────────────┘
      │  ├── variables.json   │   Merge to main    ┌────────────────────────────┐
      │  └── manifest.json    │───────────────────►│  CD: sandbox               │

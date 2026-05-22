@@ -65,7 +65,7 @@ your-project/
 │   │   └── settings.json           schema + seed rows for each data table
 │   ├── variables.json              instance variables (key/value pairs)
 │   ├── tags.json                   tag names used across workflows
-│   └── credentials.json            credential metadata (id, name, type — no secrets)
+│   └── credentials.json            credential metadata (id, name, type, no secrets)
 ├── .env                            local dev (gitignored)
 ├── .env.instance-a                   local targeting of instance-a (gitignored)
 └── .gitignore
@@ -125,7 +125,7 @@ Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targetin
 
 Workflow JSON files contain credential IDs that are instance-specific. When pushing the same workflow to different environments, those IDs need to be remapped.
 
-`.n8n_cli/mapping.json` is a **one-time setup per environment**. Once created, the CLI reads it automatically on every `workflow push` — you never need to touch it again unless you add new credentials or a new target environment.
+`.n8n_cli/mapping.json` is a **one-time setup per environment**. Once created, the CLI reads it automatically on every `workflow push`. You never need to touch it again unless you add new credentials or a new target environment.
 
 `n8n-cli` provides three commands to create the mapping. Pick one based on whether the credentials already exist on the target:
 
@@ -200,7 +200,7 @@ The mapping is applied automatically on every `workflow push`. After remapping, 
 | Command | Description |
 |---|---|
 | `variable pull` | Fetch all variables and save to `n8n/variables.json` |
-| `variable push [<file>]` | Push variables — creates missing, updates existing |
+| `variable push [<file>]` | Push variables (creates missing, updates existing) |
 | `variable push --prune` | Push variables and delete remote-only variables |
 | `variable diff [<file>]` | Compare local variables against remote |
 
@@ -267,7 +267,7 @@ n8n-cli data-table diff --all
 
 ## Credentials
 
-`n8n/credentials.json` stores credential metadata. Credential values and secrets are never fetched or stored — only `id`, `name`, and `type`.
+`n8n/credentials.json` stores credential metadata. Credential values and secrets are never fetched or stored. Only `id`, `name`, and `type` are saved.
 
 ```json
 [
@@ -348,7 +348,7 @@ jobs:
           done
 ```
 
-The diff step uses `|| true` so it never blocks the PR — it prints the diff for review without failing the build. Remove `|| true` if you want to block merges when local and remote are out of sync.
+The diff step uses `|| true` so it never blocks the PR. It prints the diff for review without failing the build. Remove `|| true` if you want to block merges when local and remote are out of sync.
 
 ---
 

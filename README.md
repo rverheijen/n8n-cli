@@ -137,7 +137,7 @@ n8n-cli workflow push n8n/workflows/1234.json --env staging
 n8n-cli workflow push n8n/workflows/1234.json --activate
 ```
 
-Pass `--activate` to activate the workflow after pushing. Only workflows that have `"active": true` in the local JSON are activated — sub-workflows and manual-trigger workflows that were inactive when pulled are left inactive.
+Pass `--activate` to activate the workflow after pushing. Only workflows that have `"active": true` in the local JSON are activated. Sub-workflows and manual-trigger workflows that were inactive when pulled are left inactive.
 
 ### `workflow push --all`
 

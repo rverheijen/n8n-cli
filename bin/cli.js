@@ -375,9 +375,10 @@ const TAG_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli tag push [<file>]',
-    `  $ n8n-cli tag push [--dir <path>]`,
+    `  $ n8n-cli tag push [--dir <path>] [--prune]`,
     '',
     'FLAGS',
+    '  --prune            Delete remote tags not present in the local file',
     `  --dir <path>       Source file or directory  (default: ./${DEFAULT_TAGS_FILE})`,
     '  --env <name>       Environment name',
     '  --env-file <path>  Load a specific .env file',
@@ -385,7 +386,10 @@ const TAG_HELP = {
     'DESCRIPTION',
     '  Reads tags from tags.json (or <file> / --dir if given). Creates any tags',
     '  that do not exist on the instance yet. Skips tags that already exist.',
-    '  Does not delete or rename tags.',
+    '  Does not rename tags.',
+    '',
+    '  With --prune, remote tags not present in the local file are deleted.',
+    '  This removes the tag from all workflows that reference it, so use with care.',
     '',
     '  If --dir points to a directory, all .json files in it are read as individual',
     '  tag objects.',
@@ -873,11 +877,13 @@ if (args[0] === 'tag' && args[1] === 'pull') {
 if (args[0] === 'tag' && args[1] === 'push') {
   const file     = args[2] && !args[2].startsWith('--') ? args[2] : null;
   const filepath = file ?? (tagsFile === DEFAULT_TAGS_FILE ? DEFAULT_TAGS_FILE : tagsFile);
+  const prune    = args.includes('--prune');
   const tags     = readTagsFile(filepath);
-  console.log(`Pushing ${tags.length} tag(s) to env: ${currentEnvName}\n`);
-  const result = pushTags(tags, env);
+  console.log(`Pushing ${tags.length} tag(s) to env: ${currentEnvName}${prune ? ' (--prune)' : ''}\n`);
+  const result = pushTags(tags, env, { prune });
   if (!result) process.exit(1);
-  console.log(`\n${result.created} created, ${result.skipped} skipped${result.failed > 0 ? `, ${result.failed} failed` : ''}`);
+  const deletedPart = prune ? `, ${result.deleted} deleted` : '';
+  console.log(`\n${result.created} created, ${result.skipped} skipped${deletedPart}${result.failed > 0 ? `, ${result.failed} failed` : ''}`);
   process.exit(result.failed > 0 ? 1 : 0);
 }
 

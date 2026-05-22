@@ -35,8 +35,8 @@ This installs the official skill and extends it with all wrapper commands so you
 
 | Command | Description |
 |---|---|
-| `workflow pull <id>` | Fetch a workflow by ID and save to `n8n/workflows/<name>.json` |
-| `workflow pull --all [--existing] [--project <name>]` | Fetch all workflows, rename local files if the workflow name changed |
+| `workflow pull <id> [--pin-data]` | Fetch a workflow by ID and save to `n8n/workflows/<name>.json` |
+| `workflow pull --all [--existing] [--project <name>] [--pin-data]` | Fetch all workflows, rename local files if the workflow name changed |
 | `workflow push <file>` | Push a workflow file (create or update) |
 | `workflow push --all` | Push all workflows in the source directory |
 | `workflow validate <file>` | Validate a workflow JSON file |
@@ -111,22 +111,24 @@ These flags apply to all custom commands and are stripped before passing to the 
 
 ### `workflow pull <id>`
 
-Fetch a single workflow by ID and save it to `n8n/workflows/<name>.json` (slugified from the workflow name). If the workflow was previously pulled under a different name, the local file is renamed automatically and the manifest is updated.
+Fetch a single workflow by ID and save it to `n8n/workflows/<name>.json` (slugified from the workflow name). If the workflow was previously pulled under a different name, the local file is renamed automatically and the manifest is updated. `pinData` is always stripped from the saved file.
 
 ```bash
 n8n-cli workflow pull 1234
 n8n-cli workflow pull 1234 --env staging
+n8n-cli workflow pull 1234 --pin-data               # also save pinned test data to n8n/mockdata/
 ```
 
 ### `workflow pull --all`
 
-Fetch all workflows from the instance and save each to `n8n/workflows/<name>.json`. Workflows that were renamed on the remote are renamed locally and reflected in the manifest.
+Fetch all workflows from the instance and save each to `n8n/workflows/<name>.json`. Workflows that were renamed on the remote are renamed locally and reflected in the manifest. `pinData` is always stripped from saved files.
 
 ```bash
 n8n-cli workflow pull --all
 n8n-cli workflow pull --all --env staging
 n8n-cli workflow pull --all --existing              # only update already-local workflows
 n8n-cli workflow pull --all --project "My Project"  # only pull workflows in a project
+n8n-cli workflow pull --all --pin-data              # also save pinned test data to n8n/mockdata/
 ```
 
 ### `workflow push <file>`
@@ -205,6 +207,8 @@ Use `deactivate` to take a workflow offline temporarily without deleting it.
 ### `workflow test <file>`
 
 Trigger a workflow via its webhook and report the HTTP result. Reads the local file to find webhook trigger nodes, constructs the URL, sends the request, and exits `1` if any request returns 4xx/5xx or fails to connect.
+
+When no `--data` flag is given, the command auto-detects `n8n/mockdata/<slug>.json` and uses the first webhook node's pinned body as the request body. Use `workflow pull --pin-data` to generate these files.
 
 ```bash
 n8n-cli workflow test n8n/workflows/my_workflow.json

@@ -10,10 +10,12 @@ import { readMapping } from '../lib/mapping.js';
 import { diffWorkflows, formatDiff } from '../lib/diff.js';
 import {
   DEFAULT_WORKFLOWS_DIR,
+  DEFAULT_MOCKDATA_DIR,
   slugifyName,
   pushWorkflow,
   pullWorkflow,
   pullAllWorkflows,
+  savePinDataFile,
   activateWorkflow,
   deactivateWorkflow,
   deleteWorkflow,
@@ -136,12 +138,18 @@ const WORKFLOW_HELP = {
     '  --all                Pull all workflows',
     '  --existing           Only update workflows that already exist locally (--all only)',
     '  --project <name>     Only pull workflows owned by this project (--all only)',
+    '  --pin-data           Save pinned test data to n8n/mockdata/<slug>.json',
     `  --dir <path>         Target directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
     '  --env <name>         Environment name',
     '  --env-file <path>    Load a specific .env file',
     '',
     'DESCRIPTION',
     `  Saves each workflow to <dir>/<id>.json (default: ./${DEFAULT_WORKFLOWS_DIR}).`,
+    '  pinData is always stripped from the saved workflow JSON.',
+    '',
+    '  With --pin-data, the pinned test data is saved separately to',
+    `  ${DEFAULT_MOCKDATA_DIR}/<slug>.json. workflow test auto-detects this file`,
+    '  when no --data flag is given.',
     '',
     '  With --existing (--all only), workflows not present locally or in the manifest',
     '  are skipped. Useful for syncing without pulling down instance-only workflows.',
@@ -249,6 +257,9 @@ const WORKFLOW_HELP = {
     '  Reads the workflow file, finds webhook trigger nodes, and sends an HTTP',
     '  request to each one. Exits 1 if any request returns 4xx/5xx or fails to',
     '  connect. Exits 0 on success or when the trigger is not a webhook.',
+    '',
+    `  When no --data flag is given, auto-detects ${DEFAULT_MOCKDATA_DIR}/<slug>.json`,
+    '  and uses the first webhook node\'s pinned body as the request body.',
     '',
     'EXAMPLES',
     '  $ n8n-cli workflow test n8n/workflows/1234.json',
@@ -579,7 +590,7 @@ if (args[0] === 'workflow' && args[1] === 'deactivate') {
 // workflow pull --all
 if (args[0] === 'workflow' && args[1] === 'pull' && all) {
   const manifest = readManifest();
-  const ok = pullAllWorkflows(workflowsDir, currentEnvName, manifest, env, { existing, project });
+  const ok = pullAllWorkflows(workflowsDir, currentEnvName, manifest, env, { existing, project, savePinData, mockdataDir: DEFAULT_MOCKDATA_DIR });
   writeManifest(manifest);
   process.exit(ok ? 0 : 1);
 }
@@ -591,8 +602,9 @@ if (args[0] === 'workflow' && args[1] === 'pull') {
     console.error('Usage: n8n-cli workflow pull <id>\n       n8n-cli workflow pull --all [--dir <path>]');
     process.exit(1);
   }
-  const workflow = pullWorkflow(workflowId, env);
-  if (!workflow) process.exit(1);
+  const pulled = pullWorkflow(workflowId, env);
+  if (!pulled) process.exit(1);
+  const { workflow, pinData } = pulled;
 
   const slug = slugifyName(workflow.name);
   const newFilename = `${slug}.json`;
@@ -612,7 +624,12 @@ if (args[0] === 'workflow' && args[1] === 'pull') {
   manifestSection[newFilename] = String(workflowId);
   fs.writeFileSync(path.join(workflowsDir, newFilename), JSON.stringify(workflow, null, 2) + '\n');
   writeManifest(manifest);
-  console.log(`Saved to ${path.join(workflowsDir, newFilename)}`);
+
+  if (savePinData && savePinDataFile(slug, pinData, DEFAULT_MOCKDATA_DIR)) {
+    console.log(`Saved to ${path.join(workflowsDir, newFilename)} + mockdata`);
+  } else {
+    console.log(`Saved to ${path.join(workflowsDir, newFilename)}`);
+  }
   process.exit(0);
 }
 
@@ -792,6 +809,26 @@ if (args[0] === 'workflow' && args[1] === 'test') {
   let workflow;
   try { workflow = JSON.parse(fs.readFileSync(file, 'utf8')); }
   catch (e) { console.error(`Error reading ${file}: ${e.message}`); process.exit(1); }
+
+  if (!dataJson) {
+    const slug = path.basename(file, '.json');
+    const mockdataFile = path.join(DEFAULT_MOCKDATA_DIR, `${slug}.json`);
+    if (fs.existsSync(mockdataFile)) {
+      try {
+        const mockdata = JSON.parse(fs.readFileSync(mockdataFile, 'utf8'));
+        const webhookNode = (workflow.nodes ?? []).find(n => n.type === 'n8n-nodes-base.webhook');
+        if (webhookNode) {
+          const nodeData = mockdata[webhookNode.name]?.[0]?.json?.body;
+          if (nodeData) {
+            dataJson = JSON.stringify(nodeData);
+            console.log(`Using mockdata from ${mockdataFile}`);
+          }
+        }
+      } catch {
+        // ignore parse errors, proceed without mock data
+      }
+    }
+  }
 
   const baseUrl = env.N8N_URL;
   if (!baseUrl) { console.error('Error: N8N_URL or N8N_API_URL is not set'); process.exit(1); }

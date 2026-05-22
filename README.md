@@ -193,8 +193,8 @@ invoice_processing.json vs remote (env: staging)
 Activate or deactivate a workflow. Accepts a local filename (resolved to a remote ID via the manifest or the `id` field in the JSON) or a raw workflow ID.
 
 ```bash
-n8n-cli workflow activate n8n/workflows/1234.json
-n8n-cli workflow deactivate n8n/workflows/1234.json --env staging
+n8n-cli workflow activate n8n/workflows/invoice_processing.json
+n8n-cli workflow deactivate n8n/workflows/invoice_processing.json --env staging
 n8n-cli workflow activate VCAF23eWI9yFfp1X          # raw ID
 ```
 
@@ -205,9 +205,9 @@ Use `deactivate` to take a workflow offline temporarily without deleting it.
 Trigger a workflow via its webhook and report the HTTP result. Reads the local file to find webhook trigger nodes, constructs the URL, sends the request, and exits `1` if any request returns 4xx/5xx or fails to connect.
 
 ```bash
-n8n-cli workflow test n8n/workflows/1234.json
-n8n-cli workflow test n8n/workflows/1234.json --data '{"key":"value"}'
-n8n-cli workflow test n8n/workflows/1234.json --prod
+n8n-cli workflow test n8n/workflows/invoice_processing.json
+n8n-cli workflow test n8n/workflows/invoice_processing.json --data '{"key":"value"}'
+n8n-cli workflow test n8n/workflows/invoice_processing.json --prod
 n8n-cli workflow test n8n/workflows/1234.json --env staging
 ```
 

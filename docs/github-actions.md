@@ -20,7 +20,7 @@ Developer pushes code
 └──────────────────────────────┘                  │  1. variable push        │
         ▲                                         │  2. data-table push      │
         │                                         │  3. workflow push --all  │
-        └─────────────────────────────────────────┘
+        └─────────────────────────────────────────┴──────────────────────────┘
                   manifest committed back
 
 ```

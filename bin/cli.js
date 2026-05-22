@@ -407,16 +407,13 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  workflow pull <id>    Fetch a workflow by ID\n` +
-    `  workflow pull --all   Fetch all workflows\n` +
-    `  workflow push <file>  Push a workflow file (create or update)\n` +
-    `  workflow push --all   Push all workflows\n` +
-    `  workflow validate     Validate a workflow JSON file\n` +
-    `  workflow diff <file>  Compare local file against remote\n` +
-    `  workflow diff --all   Diff all local workflows against remote\n` +
-    `  workflow activate     Activate a workflow\n` +
-    `  workflow deactivate   Deactivate a workflow\n` +
-    `  workflow test         Trigger webhook and report result\n`,
+    `  workflow pull        Fetch a workflow by ID, or all at once\n` +
+    `  workflow push        Push a workflow (create or update)\n` +
+    `  workflow validate    Validate a workflow JSON file\n` +
+    `  workflow diff        Compare a local workflow against remote\n` +
+    `  workflow activate    Activate a workflow\n` +
+    `  workflow deactivate  Deactivate a workflow\n` +
+    `  workflow test        Trigger webhook and report result\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -721,10 +718,8 @@ if (args[0] === 'data-table' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  data-table pull <name>  Fetch a data table by name\n` +
-    `  data-table pull --all   Fetch all data tables\n` +
-    `  data-table push <file>  Push a data table file (create or upsert rows)\n` +
-    `  data-table push --all   Push all data tables\n`,
+    `  data-table pull          Fetch a data table by name, or all\n` +
+    `  data-table push          Push a data table (create or upsert rows)\n`,
   );
   process.exit(result.status ?? 0);
 }

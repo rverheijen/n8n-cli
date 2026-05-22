@@ -43,7 +43,7 @@ npm uninstall -g n8n-cli
 | `data-table push --all` | Push all data tables in the source directory |
 | `credential pull` | Fetch credential metadata (no secrets) |
 | `credential push [<file>]` | Create credential stubs on target and update mapping |
-| `credential map [<file>]` | Match credentials by name and type, update mapping |
+| `credential map` | Match credentials by name and type, update mapping |
 | `tag pull` | Fetch all tags |
 | `tag push [<file>]` | Create missing tags on the instance |
 | `execution list` | List executions (`--workflow` accepts a filename) |

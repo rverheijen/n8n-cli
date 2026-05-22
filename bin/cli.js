@@ -407,12 +407,12 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  workflow pull <id>            Fetch a workflow by ID and save to <id>.json\n` +
-    `  workflow pull --all           Pull all workflows to ./${DEFAULT_WORKFLOWS_DIR}\n` +
+    `  workflow pull <id>            Fetch a workflow by ID\n` +
+    `  workflow pull --all           Fetch all workflows\n` +
     `  workflow push <file>          Push a workflow file (create or update)\n` +
-    `  workflow push --all           Push all workflows from ./${DEFAULT_WORKFLOWS_DIR}\n` +
+    `  workflow push --all           Push all workflows\n` +
     `  workflow validate <file>      Validate a workflow JSON file\n` +
-    `  workflow diff <file>          Compare local file against remote version\n` +
+    `  workflow diff <file>          Compare local file against remote\n` +
     `  workflow diff --all           Diff all local workflows against remote\n` +
     `  workflow activate <file|id>   Activate a workflow\n` +
     `  workflow deactivate <file|id> Deactivate a workflow\n` +
@@ -688,8 +688,8 @@ if (args[0] === 'variable' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  variable pull        Fetch all variables and save to ./${DEFAULT_VARIABLES_FILE}\n` +
-    `  variable push [<file>]  Push variables from file (default: ./${DEFAULT_VARIABLES_FILE})\n`,
+    `  variable pull          Fetch all variables\n` +
+    `  variable push [<file>] Push variables (create or update)\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -721,10 +721,10 @@ if (args[0] === 'data-table' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  data-table pull <name>   Fetch a data table and save to ./${DEFAULT_DATA_TABLES_DIR}/<name>.json\n` +
-    `  data-table pull --all    Pull all data tables to ./${DEFAULT_DATA_TABLES_DIR}\n` +
-    `  data-table push <file>   Push a data table file (create or upsert rows)\n` +
-    `  data-table push --all    Push all data tables from ./${DEFAULT_DATA_TABLES_DIR}\n`,
+    `  data-table pull <name>  Fetch a data table by name\n` +
+    `  data-table pull --all   Fetch all data tables\n` +
+    `  data-table push <file>  Push a data table file (create or upsert rows)\n` +
+    `  data-table push --all   Push all data tables\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -782,9 +782,9 @@ if (args[0] === 'credential' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  credential pull        Fetch all credentials (metadata only) to ./${DEFAULT_CREDENTIALS_FILE}\n` +
-    `  credential push [<file>]  Create stubs on target and update mapping\n` +
-    `  credential map         Match credentials by name+type and update mapping\n`,
+    `  credential pull          Fetch all credentials (metadata only)\n` +
+    `  credential push [<file>] Create credential stubs and update mapping\n` +
+    `  credential map           Match credentials by name+type, update mapping\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -835,8 +835,8 @@ if (args[0] === 'tag' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  tag pull           Fetch all tags and save to ./${DEFAULT_TAGS_FILE}\n` +
-    `  tag push [<file>]  Push tags from file (default: ./${DEFAULT_TAGS_FILE})\n`,
+    `  tag pull          Fetch all tags\n` +
+    `  tag push [<file>] Push tags (create missing, skip existing)\n`,
   );
   process.exit(result.status ?? 0);
 }

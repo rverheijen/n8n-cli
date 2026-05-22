@@ -4,7 +4,7 @@ A custom wrapper around the official [`n8n-cli`](https://www.npmjs.com/package/@
 
 All official `n8n-cli` commands and flags pass through unchanged. This wrapper adds CI/CD-oriented commands on top.
 
-## Installation
+## Install
 
 ```bash
 npm install -g github:rverheijen/n8n-cli

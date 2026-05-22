@@ -29,7 +29,8 @@ Shell variables always take precedence over .env values.
 n8n-cli workflow pull <id>
 n8n-cli workflow pull --all
 n8n-cli workflow pull --all --env staging
-n8n-cli workflow pull --all --existing        # only update already-local workflows
+n8n-cli workflow pull --all --existing              # only update already-local workflows
+n8n-cli workflow pull --all --project "My Project"  # only pull workflows in a project
 
 # Push (create or update via manifest)
 n8n-cli workflow push <file>

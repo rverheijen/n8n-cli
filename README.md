@@ -36,7 +36,7 @@ This installs the official skill and extends it with all wrapper commands so you
 | Command | Description |
 |---|---|
 | `workflow pull <id>` | Fetch a workflow by ID and save to `n8n/workflows/<name>.json` |
-| `workflow pull --all [--existing]` | Fetch all workflows, rename local files if the workflow name changed |
+| `workflow pull --all [--existing] [--project <name>]` | Fetch all workflows, rename local files if the workflow name changed |
 | `workflow push <file>` | Push a workflow file (create or update) |
 | `workflow push --all` | Push all workflows in the source directory |
 | `workflow validate <file>` | Validate a workflow JSON file |
@@ -125,7 +125,8 @@ Fetch all workflows from the instance and save each to `n8n/workflows/<name>.jso
 ```bash
 n8n-cli workflow pull --all
 n8n-cli workflow pull --all --env staging
-n8n-cli workflow pull --all --existing        # only update already-local workflows
+n8n-cli workflow pull --all --existing              # only update already-local workflows
+n8n-cli workflow pull --all --project "My Project"  # only pull workflows in a project
 ```
 
 ### `workflow push <file>`

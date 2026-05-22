@@ -752,7 +752,8 @@ n8n-cli execution get <id> --includeData --json
 ```bash
 # Initial setup: pull everything from your instance
 n8n-cli workflow pull --all
-n8n-cli workflow pull --all --existing        # only update already-local workflows
+n8n-cli workflow pull --all --existing              # only update already-local workflows
+n8n-cli workflow pull --all --project "My Project"  # only pull workflows in a project
 n8n-cli variable pull
 n8n-cli data-table pull --all
 n8n-cli data-table pull --all --existing      # only update already-local tables

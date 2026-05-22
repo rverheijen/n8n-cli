@@ -6,23 +6,31 @@ This guide explains how to use `n8n-cli` with GitHub Actions to validate, deploy
 
 ## How it works
 
-```text
-Developer pushes code
-        │
-        ▼
-┌──────────────────────────────┐   PR opened    ┌──────────────────────────┐
-│  Git repo                    │ ─────────────► │  CI: validate            │
-│  n8n/                        │                │  Changed workflow files   │
-│  ├── workflows/              │                └──────────────────────────┘
-│  ├── data-tables/            │
-│  ├── variables.json          │   Merge to main  ┌──────────────────────────┐
-│  └── n8n-cli.manifest.json   │ ───────────────► │  CD: deploy              │
-└──────────────────────────────┘                  │  1. variable push        │
-        ▲                                         │  2. data-table push      │
-        │                                         │  3. workflow push --all  │
-        └─────────────────────────────────────────┴──────────────────────────┘
-                  manifest committed back
+```mermaid
+graph TD
+    %% Nodes
+    Dev[Developer pushes code] --> Git
 
+    subgraph Git ["Git Repository (n8n/)"]
+        direction TB
+        W[workflows/]
+        DT[data-tables/]
+        V[variables.json]
+        M[n8n-cli.manifest.json]
+    end
+
+    CI[<b>CI: Validate</b><br>• Scan changed workflow files]
+    CD[<b>CD: Deploy</b><br>1. Variable push<br>2. Data-table push<br>3. Workflow push --all]
+
+    %% Actions
+    Git -- "PR opened" --> CI
+    Git -- "Merge to main" --> CD
+    CD -- "Manifest committed back" --> Git
+
+    %% Styling
+    style Git fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style CI fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
+    style CD fill:#e8f5e9,stroke:#388e3c,stroke-width:1px
 ```
 
 Deployment order matters: variables and data tables are pushed first so workflows can reference them at runtime.

@@ -8,36 +8,37 @@ This guide explains how to use `n8n-cli` with GitHub Actions to validate, deploy
 
 ```text
 Developer pushes code
-                    │
-                    ▼
-     ┌─────────────────────────────┐    PR opened    ┌────────────────────────────┐
-     │  Git repo                   │───────────────►│  CI: validate              │
-     │  ├── n8n/                   │                │  └─ Changed workflow files │
-     │  │   ├── workflows/         │                └────────────────────────────┘
-     │  │   ├── data-tables/       │  Merge to main ┌────────────────────────────┐
-     │  │   └── variables.json     │───────────────►│  CD: sandbox               │
-     │  └── .n8n_cli/              │                │  1. variable push          │
-     │      ├── manifest.json      │                │  2. data-table push        │
-     │      └── mapping.json       │                └──────────────┬─────────────┘
-     └─────────────────────────────┘                             │ passes
-                    ▲                                            ▼
-                    │                            ┌────────────────────────────┐
-                    │                            │  CD: quality_assurance     │
-                    │                            │  1. variable push          │
-                    │                            │  2. data-table push        │
-                    │                            │  3. workflow push --all    │
-                    │                            └──────────────┬─────────────┘
-                    │                                           │ approved
-                    │                                           ▼
-                    │                            ┌────────────────────────────┐
-                    │                            │  CD: production            │
-                    │                            │  1. variable push          │
-                    │                            │  2. data-table push        │
-                    │                            │  3. workflow push --all    │
-                    │                            └──────────────┬─────────────┘
-                    │                                           │
-                    └───────────────────────────────────────────┘
-                               manifest committed back
+                 │
+                 ▼
+     ┌─────────────────────────────┐    PR opened       ┌────────────────────────────┐
+     │  Git repo                   │───────────────────►│  CI: validate              │
+     │  ├── n8n/                   │                    │  └─ Changed workflow files │
+     │  │   ├── workflows/         │                    └────────────────────────────┘
+     │  │   ├── data-tables/       │   Merge to main    ┌────────────────────────────┐
+     │  │   └── variables.json     │───────────────────►│  CD: sandbox               │
+     │  └── .n8n_cli/              │                    │  1. variable push          │
+     │      ├── manifest.json      │                    │  2. data-table push        │
+     │      └── mapping.json       │                    │  3. workflow push --all    │
+     └─────────────────────────────┘                    └──────────────┬─────────────┘
+                 ▲                                                     │ passes
+                 │                                                     ▼
+                 │                                      ┌────────────────────────────┐
+                 │                                      │  CD: quality_assurance     │
+                 │                                      │  1. variable push          │
+                 │                                      │  2. data-table push        │
+                 │                                      │  3. workflow push --all    │
+                 │                                      └──────────────┬─────────────┘
+                 │                                                     │ approved
+                 │                                                     ▼
+                 │                                      ┌────────────────────────────┐
+                 │                                      │  CD: production            │
+                 │                                      │  1. variable push          │
+                 │                                      │  2. data-table push        │
+                 │                                      │  3. workflow push --all    │
+                 │                                      └──────────────┬─────────────┘
+                 │                                                     │
+                 └─────────────────────────────────────────────────────┘
+                              manifest committed back
 ```
 
 Deployment order matters: variables and data tables are pushed first so workflows can reference them at runtime.

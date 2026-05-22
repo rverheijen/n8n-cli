@@ -300,6 +300,39 @@ See [Credential mapping](#credential-mapping) above for the full setup workflow.
 
 ---
 
+## Tags
+
+`n8n/tags.json` stores tag metadata as a flat list:
+
+```json
+[
+  { "id": "tag-id-1", "name": "production" },
+  { "id": "tag-id-2", "name": "finance" }
+]
+```
+
+When `--dir` points to a directory (no `.json` extension), each tag is stored in its own file.
+
+| Command | Description |
+|---|---|
+| `tag pull [--dir <path>]` | Fetch all tags from the instance |
+| `tag push [<file>] [--dir <path>]` | Create missing tags on the instance |
+
+```bash
+# Pull all tags
+n8n-cli tag pull
+n8n-cli tag pull --dir n8n/tags     # one file per tag
+
+# Push tags
+n8n-cli tag push
+n8n-cli tag push --dir n8n/tags     # from per-file directory
+n8n-cli tag push --prune            # also delete remote-only tags
+```
+
+Tags are pushed before workflows in the deployment pipeline so workflow files can reference them by name.
+
+---
+
 ## Workflow files
 
 ### CI: Validate on pull request

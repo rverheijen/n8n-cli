@@ -55,7 +55,7 @@ import {
 
 // --- Bootstrap ---
 
-const { remaining: args, envFile, envName, dir, all, existing, project } = parseCustomFlags(process.argv.slice(2));
+const { remaining: args, envFile, envName, dir, all, existing, project, savePinData } = parseCustomFlags(process.argv.slice(2));
 
 loadEnvFile(envFile, envName);
 

@@ -114,9 +114,9 @@ These flags apply to all custom commands and are stripped before passing to the 
 Fetch a single workflow by ID and save it to `n8n/workflows/<name>.json` (slugified from the workflow name). If the workflow was previously pulled under a different name, the local file is renamed automatically and the manifest is updated. `pinData` is always stripped from the saved file.
 
 ```bash
-n8n-cli workflow pull 1234
-n8n-cli workflow pull 1234 --env staging
-n8n-cli workflow pull 1234 --pin-data               # also save pinned test data to n8n/mockdata/
+n8n-cli workflow pull VCAF23eWI9yFfp1X
+n8n-cli workflow pull VCAF23eWI9yFfp1X --env staging
+n8n-cli workflow pull VCAF23eWI9yFfp1X --pin-data               # also save pinned test data to n8n/mockdata/
 ```
 
 ### `workflow pull --all`

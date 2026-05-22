@@ -262,9 +262,9 @@ const WORKFLOW_HELP = {
     '  and uses the first webhook node\'s pinned body as the request body.',
     '',
     'EXAMPLES',
-    '  $ n8n-cli workflow test n8n/workflows/1234.json',
-    `  $ n8n-cli workflow test n8n/workflows/1234.json --data '{"key":"value"}'`,
-    '  $ n8n-cli workflow test n8n/workflows/1234.json --prod',
+    '  $ n8n-cli workflow test n8n/workflows/VCAF23eWI9yFfp1X.json',
+    `  $ n8n-cli workflow test n8n/workflows/VCAF23eWI9yFfp1X.json --data '{"key":"value"}'`,
+    '  $ n8n-cli workflow test n8n/workflows/VCAF23eWI9yFfp1X.json --prod',
   ],
 };
 
@@ -1180,7 +1180,7 @@ if (args[0] === 'execution' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'NOTE\n' +
-    '  --workflow accepts a local filename (e.g. n8n/workflows/1234.json)\n' +
+    '  --workflow accepts a local filename (e.g. n8n/workflows/VCAF23eWI9yFfp1X.json)\n' +
     '  and resolves it to the remote workflow ID via the manifest.\n',
   );
   process.exit(result.status ?? 0);

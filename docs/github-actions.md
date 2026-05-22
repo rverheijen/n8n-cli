@@ -62,7 +62,7 @@ your-project/
 │   │   ├── my_workflow.json
 │   │   └── send_notification.json
 │   ├── data-tables/
-│   │   └── my_settings.json        schema + seed rows for each data table
+│   │   └── my_data_table.json        schema + seed rows for each data table
 │   ├── variables.json              instance variables (key/value pairs)
 │   ├── tags.json                   tag names used across workflows
 │   └── credentials.json            credential metadata (id, name, type, no secrets)

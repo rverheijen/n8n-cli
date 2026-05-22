@@ -345,8 +345,8 @@ n8n-cli data-table pull --all --env staging
 Push a data table file. Creates the table if it doesn't exist, then upserts all rows.
 
 ```bash
-n8n-cli data-table push n8n/data-tables/my_settings.json
-n8n-cli data-table push n8n/data-tables/my_settings.json --env instance-a
+n8n-cli data-table push n8n/data-tables/my_data_table.json
+n8n-cli data-table push n8n/data-tables/my_data_table.json --env instance-a
 ```
 
 ### `data-table push --all`
@@ -366,8 +366,8 @@ Pass `--prune` to also delete remote tables tracked in the manifest whose local 
 Compare a local data table file against the remote version. Shows column and row-level changes by `upsertKey`.
 
 ```bash
-n8n-cli data-table diff n8n/data-tables/my_settings.json
-n8n-cli data-table diff n8n/data-tables/my_settings.json --env staging
+n8n-cli data-table diff n8n/data-tables/my_data_table.json
+n8n-cli data-table diff n8n/data-tables/my_data_table.json --env staging
 ```
 
 ### `data-table diff --all`

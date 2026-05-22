@@ -7,30 +7,31 @@ This guide explains how to use `n8n-cli` with GitHub Actions to validate, deploy
 ## How it works
 
 ```mermaid
-graph TD
-    %% Nodes
+graph LR
+    %% Left Trigger
     Dev[Developer pushes code] --> Git
 
-    subgraph Git ["Git Repository (n8n/)"]
+    %% Main Repository Box
+    subgraph Git ["Git repo<br>n8n/"]
         direction TB
-        W[workflows/]
-        DT[data-tables/]
-        V[variables.json]
-        M[n8n-cli.manifest.json]
+        Tree["├── workflows/<br>├── data-tables/<br>├── variables.json<br>└── n8n-cli.manifest.json"]
     end
 
-    CI[<b>CI: Validate</b><br>• Scan changed workflow files]
-    CD[<b>CD: Deploy</b><br>1. Variable push<br>2. Data-table push<br>3. Workflow push --all]
+    %% Process Boxes
+    CI["CI: validate<br>Changed workflow files"]
+    CD["CD: deploy<br>1. variable push<br>2. data-table push<br>3. workflow push --all"]
 
-    %% Actions
-    Git -- "PR opened" --> CI
-    Git -- "Merge to main" --> CD
-    CD -- "Manifest committed back" --> Git
+    %% Connections
+    Git -->|PR opened| CI
+    Git -->|Merge to main| CD
+    CD -->|manifest committed back| Git
 
-    %% Styling
-    style Git fill:#f9f9f9,stroke:#333,stroke-width:2px
-    style CI fill:#e1f5fe,stroke:#0288d1,stroke-width:1px
-    style CD fill:#e8f5e9,stroke:#388e3c,stroke-width:1px
+    %% Styling for clean, minimal look
+    style Dev fill:none,stroke:none
+    style Tree text-align:left,fill:none,stroke:none
+    style Git fill:#fff,stroke:#333,stroke-width:2px,rx:10px,ry:10px
+    style CI fill:#fff,stroke:#333,stroke-width:2px,rx:8px,ry:8px,text-align:left
+    style CD fill:#fff,stroke:#333,stroke-width:2px,rx:8px,ry:8px,text-align:left
 ```
 
 Deployment order matters: variables and data tables are pushed first so workflows can reference them at runtime.

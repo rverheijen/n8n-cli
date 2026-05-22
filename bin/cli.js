@@ -886,7 +886,10 @@ if (args[0] === 'data-table' && (args[1] === '--help' || args[1] === '-h')) {
 
 // data-table pull --all
 if (args[0] === 'data-table' && args[1] === 'pull' && all) {
-  process.exit(pullAllDataTables(tablesDir, env) ? 0 : 1);
+  const manifest = readManifest();
+  const ok = pullAllDataTables(tablesDir, currentEnvName, manifest, env);
+  writeManifest(manifest);
+  process.exit(ok ? 0 : 1);
 }
 
 // data-table pull <name>
@@ -896,17 +899,35 @@ if (args[0] === 'data-table' && args[1] === 'pull') {
     console.error('Usage: n8n-cli data-table pull <name>\n       n8n-cli data-table pull --all [--dir <path>]');
     process.exit(1);
   }
-  // Look up table by name to get its ID
   const listResult = runCli(['data-table', 'list', '--json'], env);
   if (listResult.status !== 0) { process.stderr.write(listResult.stderr); process.exit(1); }
   const tables = JSON.parse(listResult.stdout.toString());
   const table  = tables.find(t => t.name === tableName);
   if (!table) { console.error(`Error: data table "${tableName}" not found`); process.exit(1); }
-  if (pullDataTable(String(table.id), tableName, tablesDir, env)) {
-    console.log(`Saved to ${path.join(tablesDir, `${tableName}.json`)}`);
-    process.exit(0);
+
+  const data = pullDataTable(String(table.id), env);
+  if (!data) process.exit(1);
+
+  const slug = slugifyName(data.name);
+  const newFilename = `${slug}.json`;
+  const manifest = readManifest();
+  const manifestSection = (manifest[currentEnvName] ??= {})['data-tables'] ??= {};
+  const existingFilename = Object.keys(manifestSection).find(f => String(manifestSection[f]) === String(table.id));
+
+  fs.mkdirSync(tablesDir, { recursive: true });
+
+  if (existingFilename && existingFilename !== newFilename) {
+    const oldPath = path.join(tablesDir, existingFilename);
+    if (fs.existsSync(oldPath)) fs.renameSync(oldPath, path.join(tablesDir, newFilename));
+    delete manifestSection[existingFilename];
+    console.log(`Renamed  ${existingFilename} -> ${newFilename}`);
   }
-  process.exit(1);
+
+  manifestSection[newFilename] = String(table.id);
+  fs.writeFileSync(path.join(tablesDir, newFilename), JSON.stringify(data, null, 2) + '\n');
+  writeManifest(manifest);
+  console.log(`Saved to ${path.join(tablesDir, newFilename)}`);
+  process.exit(0);
 }
 
 // data-table push --all

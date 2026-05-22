@@ -128,7 +128,7 @@ function formatDataTableDiff(diff, label) {
 
 const WORKFLOW_HELP = {
   pull: [
-    `Fetch a workflow by ID and save it to ${DEFAULT_WORKFLOWS_DIR}/<id>.json`,
+    `Fetch a workflow by ID and save it to ${DEFAULT_WORKFLOWS_DIR}/<name>.json`,
     '',
     'USAGE',
     '  $ n8n-cli workflow pull <id> [--dir <path>]',
@@ -144,7 +144,7 @@ const WORKFLOW_HELP = {
     '  --env-file <path>    Load a specific .env file',
     '',
     'DESCRIPTION',
-    `  Saves each workflow to <dir>/<id>.json (default: ./${DEFAULT_WORKFLOWS_DIR}).`,
+    `  Saves each workflow to <dir>/<name>.json (default: ./${DEFAULT_WORKFLOWS_DIR}).`,
     '  pinData is always stripped from the saved workflow JSON.',
     '',
     '  With --pin-data, the pinned test data is saved separately to',

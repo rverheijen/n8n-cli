@@ -152,17 +152,14 @@ const WORKFLOW_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli workflow activate <file|id> [--env <name>]',
-    '  $ n8n-cli workflow activate --all     [--env <name>]',
     '',
     'FLAGS',
-    '  --all              Activate all workflows in the manifest',
     '  --env <name>       Environment name',
     '  --env-file <path>  Load a specific .env file',
     '',
     'DESCRIPTION',
     '  Accepts a local filename (resolves to remote ID via manifest or id field)',
-    '  or a raw workflow ID. Use --all to activate every workflow in the manifest',
-    '  for the current environment — useful as the final step of a deploy.',
+    '  or a raw workflow ID.',
   ],
   deactivate: [
     'Deactivate a workflow',
@@ -356,7 +353,6 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
     `  workflow diff <file>          Compare local file against remote version\n` +
     `  workflow diff --all           Diff all local workflows against remote\n` +
     `  workflow activate <file|id>   Activate a workflow\n` +
-    `  workflow activate --all       Activate all workflows in the manifest\n` +
     `  workflow deactivate <file|id> Deactivate a workflow\n` +
     `  workflow deactivate --all     Deactivate all workflows in the manifest\n` +
     `  workflow test <file>          Trigger webhook and report result\n`,
@@ -383,30 +379,6 @@ if (args[0] === 'data-table' && DATA_TABLE_HELP[args[1]] &&
     (args.includes('--help') || args.includes('-h'))) {
   console.log(DATA_TABLE_HELP[args[1]].join('\n'));
   process.exit(0);
-}
-
-// workflow activate --all
-if (args[0] === 'workflow' && args[1] === 'activate' && all) {
-  const manifest  = readManifest();
-  const workflows = getSection(manifest, currentEnvName, 'workflows');
-  const entries   = Object.entries(workflows);
-  if (entries.length === 0) {
-    console.log(`No workflows in manifest for env: ${currentEnvName}`);
-    process.exit(0);
-  }
-  console.log(`Activating ${entries.length} workflow(s) in env: ${currentEnvName}\n`);
-  let ok = 0, failed = 0;
-  for (const [filename, remoteId] of entries) {
-    if (activateWorkflow(String(remoteId), env)) {
-      console.log(`Activated  ${filename} (${remoteId})`);
-      ok++;
-    } else {
-      console.error(`Failed     ${filename} (${remoteId})`);
-      failed++;
-    }
-  }
-  console.log(`\n${ok} activated${failed > 0 ? `, ${failed} failed` : ''}`);
-  process.exit(failed > 0 ? 1 : 0);
 }
 
 // workflow activate <file|id>

@@ -32,7 +32,6 @@ npm uninstall -g n8n-cli
 | `workflow diff <file>` | Compare a local file against the remote version |
 | `workflow diff --all` | Compare all local files against remote |
 | `workflow activate <file\|id>` | Activate a workflow (accepts filename or raw ID) |
-| `workflow activate --all` | Activate all workflows in the manifest |
 | `workflow deactivate <file\|id>` | Deactivate a workflow |
 | `workflow deactivate --all` | Deactivate all workflows in the manifest |
 | `workflow test <file>` | Trigger a workflow webhook and report the result |
@@ -174,15 +173,7 @@ n8n-cli workflow deactivate n8n/workflows/1234.json --env staging
 n8n-cli workflow activate VCAF23eWI9yFfp1X          # raw ID
 ```
 
-Use `--all` to activate or deactivate every workflow in the manifest for the current environment:
-
-```bash
-n8n-cli workflow activate --all
-n8n-cli workflow activate --all --env staging
-n8n-cli workflow deactivate --all --env staging
-```
-
-This is most useful as the final step in a deploy pipeline — push first, then activate.
+Use `deactivate` to take a workflow offline temporarily without deleting it.
 
 ### `workflow test <file>`
 

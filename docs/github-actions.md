@@ -367,12 +367,6 @@ jobs:
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: n8n-cli workflow push --all
 
-      - name: Activate workflows
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli workflow activate --all
-
       - name: Commit updated manifest
         run: |
           git config user.name "github-actions[bot]"
@@ -448,12 +442,6 @@ jobs:
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: n8n-cli workflow push --all --env ${{ matrix.client }}
 
-      - name: Activate workflows for ${{ matrix.client }}
-        env:
-          N8N_API_URL: ${{ secrets.N8N_API_URL }}
-          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli workflow activate --all --env ${{ matrix.client }}
-
       - name: Commit updated manifest
         run: |
           git config user.name "github-actions[bot]"
@@ -491,7 +479,6 @@ n8n-cli workflow validate n8n/workflows/my-workflow.json
 n8n-cli variable push --env staging
 n8n-cli data-table push --all --env staging
 n8n-cli workflow push --all --env staging
-n8n-cli workflow activate --all --env staging
 
 # Smoke test a webhook workflow
 n8n-cli workflow test n8n/workflows/1234.json --env staging
@@ -540,9 +527,6 @@ From this point on, GitHub Actions handles deployments on every push to main.
 
 **`workflow test` returns a 404 or "test webhook not registered"**
 The test webhook URL only works when the workflow is active and you have opened it in the n8n editor at least once. For production webhook URLs, use `--prod` and make sure the workflow is activated.
-
-**`workflow activate --all` fails with "workflow not found"**
-The manifest entry points to a workflow that was deleted on the instance. Remove the stale entry from `n8n/n8n-cli.manifest.json` or re-push the workflow to create a fresh one.
 
 **A workflow was edited directly on the instance and is out of sync with git**
 Run `workflow diff` to see what changed, then either pull the remote version (`workflow pull <id>`) or push the git version back (`workflow push <file>`).

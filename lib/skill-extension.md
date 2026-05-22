@@ -28,7 +28,7 @@ Shell variables always take precedence over .env values.
 # Pull
 n8n-cli workflow pull <id>
 n8n-cli workflow pull --all
-n8n-cli workflow pull --all --dir ./backup
+n8n-cli workflow pull --all --env staging
 
 # Push (create or update via manifest)
 n8n-cli workflow push <file>
@@ -81,8 +81,8 @@ Credential values and secrets are never fetched or stored. Only id, name, and ty
 ```bash
 n8n-cli credential pull                           # save metadata to n8n/credentials.json
 n8n-cli credential pull --dir n8n/credentials    # one file per credential
-n8n-cli credential push --env client-a           # create stubs and update mapping
-n8n-cli credential map --env client-a            # match existing credentials by name+type
+n8n-cli credential push --env instance-a           # create stubs and update mapping
+n8n-cli credential map --env instance-a            # match existing credentials by name+type
 ```
 
 ### Tag Commands

@@ -57,8 +57,8 @@ This installs the official skill and extends it with all wrapper commands so you
 | `credential pull [--dir <path>]` | Fetch credential metadata (no secrets) |
 | `credential push [<file>] [--dir <path>]` | Create credential stubs on target and update mapping |
 | `credential map [--dir <path>]` | Match credentials by name and type, update mapping |
-| `tag pull` | Fetch all tags |
-| `tag push [<file>]` | Create missing tags on the instance |
+| `tag pull [--dir <path>]` | Fetch all tags |
+| `tag push [<file>] [--dir <path>]` | Create missing tags on the instance |
 | `execution list` | List executions (`--workflow` accepts a filename) |
 | `execution get <id>` | Get details for a single execution |
 

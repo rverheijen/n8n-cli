@@ -48,8 +48,8 @@ This installs the official skill and extends it with all wrapper commands so you
 | `variable pull` | Fetch all variables |
 | `variable push [<file>]` | Push variables (create or update) |
 | `variable diff [<file>]` | Compare local variables against remote |
-| `data-table pull <name>` | Fetch a data table by name |
-| `data-table pull --all` | Fetch all data tables |
+| `data-table pull <name>` | Fetch a data table by name and save to `n8n/data-tables/<name>.json` |
+| `data-table pull --all` | Fetch all data tables, rename local files if the table name changed |
 | `data-table push <file>` | Push a data table file |
 | `data-table push --all` | Push all data tables in the source directory |
 | `data-table diff <file>` | Compare a local data table against remote |
@@ -324,16 +324,16 @@ Each data table is stored as a JSON file in `n8n/data-tables/` with its schema a
 
 ### `data-table pull <name>`
 
-Fetch a single data table by name and save to `n8n/data-tables/<name>.json`.
+Fetch a single data table by name and save to `n8n/data-tables/<name>.json` (slugified). If the table was previously pulled under a different name, the local file is renamed automatically and the manifest is updated.
 
 ```bash
 n8n-cli data-table pull settings
-n8n-cli data-table pull settings --dir ./backup
+n8n-cli data-table pull settings --env staging
 ```
 
 ### `data-table pull --all`
 
-Fetch all data tables and save each to `n8n/data-tables/`.
+Fetch all data tables and save each to `n8n/data-tables/<name>.json`. Tables that were renamed on the remote are renamed locally and reflected in the manifest.
 
 ```bash
 n8n-cli data-table pull --all

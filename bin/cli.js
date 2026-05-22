@@ -138,7 +138,7 @@ const WORKFLOW_HELP = {
     '  --all                Pull all workflows',
     '  --existing           Only update workflows that already exist locally (--all only)',
     '  --project <name>     Only pull workflows owned by this project (--all only)',
-    '  --pin-data           Save pinned test data to n8n/mockdata/<slug>.json',
+    '  --pin-data           Save pinned test data to data/mockdata/<slug>.json',
     `  --dir <path>         Target directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
     '  --env <name>         Environment name',
     '  --env-file <path>    Load a specific .env file',

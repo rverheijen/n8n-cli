@@ -27,12 +27,12 @@ Shell variables always take precedence over .env values.
 ```bash
 # Pull
 n8n-cli workflow pull <id>
-n8n-cli workflow pull <id> --pin-data               # also save pinned test data to n8n/mockdata/
+n8n-cli workflow pull <id> --pin-data               # also save pinned test data to data/mockdata/
 n8n-cli workflow pull --all
 n8n-cli workflow pull --all --env staging
 n8n-cli workflow pull --all --existing              # only update already-local workflows
 n8n-cli workflow pull --all --project "My Project"  # only pull workflows in a project
-n8n-cli workflow pull --all --pin-data              # also save pinned test data to n8n/mockdata/
+n8n-cli workflow pull --all --pin-data              # also save pinned test data to data/mockdata/
 
 # Push (create or update via manifest)
 n8n-cli workflow push <file>
@@ -51,7 +51,7 @@ n8n-cli workflow validate <file>
 n8n-cli workflow activate <file|id>
 n8n-cli workflow deactivate <file|id>
 
-# Test webhook (auto-uses n8n/mockdata/<slug>.json when no --data flag)
+# Test webhook (auto-uses data/mockdata/<slug>.json when no --data flag)
 n8n-cli workflow test <file>
 n8n-cli workflow test <file> --prod               # use production URL
 n8n-cli workflow test <file> --data '{"key":"value"}'

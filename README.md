@@ -116,7 +116,7 @@ Fetch a single workflow by ID and save it to `n8n/workflows/<name>.json` (slugif
 ```bash
 n8n-cli workflow pull VCAF23eWI9yFfp1X
 n8n-cli workflow pull VCAF23eWI9yFfp1X --env staging
-n8n-cli workflow pull VCAF23eWI9yFfp1X --pin-data               # also save pinned test data to n8n/mockdata/
+n8n-cli workflow pull VCAF23eWI9yFfp1X --pin-data               # also save pinned test data to data/mockdata/
 ```
 
 ### `workflow pull --all`
@@ -128,7 +128,7 @@ n8n-cli workflow pull --all
 n8n-cli workflow pull --all --env staging
 n8n-cli workflow pull --all --existing              # only update already-local workflows
 n8n-cli workflow pull --all --project "My Project"  # only pull workflows in a project
-n8n-cli workflow pull --all --pin-data              # also save pinned test data to n8n/mockdata/
+n8n-cli workflow pull --all --pin-data              # also save pinned test data to data/mockdata/
 ```
 
 ### `workflow push <file>`
@@ -208,7 +208,7 @@ Use `deactivate` to take a workflow offline temporarily without deleting it.
 
 Trigger a workflow via its webhook and report the HTTP result. Reads the local file to find webhook trigger nodes, constructs the URL, sends the request, and exits `1` if any request returns 4xx/5xx or fails to connect.
 
-When no `--data` flag is given, the command auto-detects `n8n/mockdata/<slug>.json` and uses the first webhook node's pinned body as the request body. Use `workflow pull --pin-data` to generate these files.
+When no `--data` flag is given, the command auto-detects `data/mockdata/<slug>.json` and uses the first webhook node's pinned body as the request body. Use `workflow pull --pin-data` to generate these files.
 
 ```bash
 n8n-cli workflow test n8n/workflows/my_workflow.json

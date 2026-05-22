@@ -754,7 +754,7 @@ n8n-cli execution get <id> --includeData --json
 n8n-cli workflow pull --all
 n8n-cli workflow pull --all --existing              # only update already-local workflows
 n8n-cli workflow pull --all --project "My Project"  # only pull workflows in a project
-n8n-cli workflow pull --all --pin-data              # also save pinned test data to n8n/mockdata/
+n8n-cli workflow pull --all --pin-data              # also save pinned test data to data/mockdata/
 n8n-cli variable pull
 n8n-cli data-table pull --all
 n8n-cli data-table pull --all --existing      # only update already-local tables
@@ -777,7 +777,7 @@ n8n-cli variable push --env staging
 n8n-cli data-table push --all --env staging
 n8n-cli workflow push --all --env staging
 
-# Smoke test a webhook workflow (auto-uses n8n/mockdata/<slug>.json if present)
+# Smoke test a webhook workflow (auto-uses data/mockdata/<slug>.json if present)
 n8n-cli workflow test n8n/workflows/my_workflow.json --env staging
 
 # Commit and push; GitHub Actions handles the rest

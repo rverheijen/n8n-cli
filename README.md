@@ -46,8 +46,8 @@ This installs the official skill and extends it with all wrapper commands so you
 | `workflow deactivate <file\|id>` | Deactivate a workflow |
 | `workflow test <file>` | Trigger a workflow webhook and report the result |
 | `variable pull` | Fetch all variables |
-| `variable push <file>` | Push variables (create or update) |
-| `variable diff <file>` | Compare local variables against remote |
+| `variable push [<file>]` | Push variables (create or update) |
+| `variable diff [<file>]` | Compare local variables against remote |
 | `data-table pull <name>` | Fetch a data table by name |
 | `data-table pull --all` | Fetch all data tables |
 | `data-table push <file>` | Push a data table file |
@@ -55,10 +55,10 @@ This installs the official skill and extends it with all wrapper commands so you
 | `data-table diff <file>` | Compare a local data table against remote |
 | `data-table diff --all` | Compare all local data tables against remote |
 | `credential pull` | Fetch credential metadata (no secrets) |
-| `credential push <file>` | Create credential stubs on target and update mapping |
+| `credential push [<file>]` | Create credential stubs on target and update mapping |
 | `credential map` | Match credentials by name and type, update mapping |
 | `tag pull` | Fetch all tags |
-| `tag push <file>` | Create missing tags on the instance |
+| `tag push [<file>]` | Create missing tags on the instance |
 | `execution list` | List executions (`--workflow` accepts a filename) |
 | `execution get <id>` | Get details for a single execution |
 
@@ -266,7 +266,7 @@ n8n-cli variable pull
 n8n-cli variable pull --env staging
 ```
 
-### `variable push <file>`
+### `variable push [<file>]`
 
 Push variables to the instance. Creates missing variables, updates existing ones.
 
@@ -279,7 +279,7 @@ n8n-cli variable push --prune
 
 Pass `--prune` to also delete remote variables not present in the local file.
 
-### `variable diff <file>`
+### `variable diff [<file>]`
 
 Compare local variables against the remote instance. Shows variables that would be created, deleted, or updated by push.
 
@@ -412,7 +412,7 @@ n8n-cli credential pull --env staging
 n8n-cli credential pull --dir n8n/credentials   # one file per credential
 ```
 
-### `credential push <file>`
+### `credential push [<file>]`
 
 Create empty credential stubs on a target instance for each entry in `credentials.json`. Updates `.n8n_cli/mapping.json` with the source->target ID mapping. Already-mapped credentials are skipped.
 
@@ -466,7 +466,7 @@ n8n-cli tag pull --env staging
 n8n-cli tag pull --dir n8n/tags   # one file per tag
 ```
 
-### `tag push <file>`
+### `tag push [<file>]`
 
 Push tags to the instance. Creates any tag that does not exist yet. Skips tags that already exist. Does not rename tags.
 

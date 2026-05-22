@@ -200,9 +200,9 @@ The mapping is applied automatically on every `workflow push`. After remapping, 
 | Command | Description |
 |---|---|
 | `variable pull` | Fetch all variables and save to `n8n/variables.json` |
-| `variable push <file>` | Push variables (creates missing, updates existing) |
+| `variable push [<file>]` | Push variables (creates missing, updates existing) |
 | `variable push --prune` | Push variables and delete remote-only variables |
-| `variable diff <file>` | Compare local variables against remote |
+| `variable diff [<file>]` | Compare local variables against remote |
 
 ```bash
 n8n-cli variable pull
@@ -279,7 +279,7 @@ n8n-cli data-table diff --all
 | Command | Description |
 |---|---|
 | `credential pull` | Fetch credential metadata from the instance |
-| `credential push <file>` | Create stubs on target and populate the mapping |
+| `credential push [<file>]` | Create stubs on target and populate the mapping |
 | `credential map` | Match credentials by name+type and update mapping |
 
 ```bash

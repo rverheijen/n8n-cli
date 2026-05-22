@@ -53,7 +53,7 @@ import {
 
 // --- Bootstrap ---
 
-const { remaining: args, envFile, envName, dir, all, existing } = parseCustomFlags(process.argv.slice(2));
+const { remaining: args, envFile, envName, dir, all, existing, project } = parseCustomFlags(process.argv.slice(2));
 
 loadEnvFile(envFile, envName);
 
@@ -130,20 +130,24 @@ const WORKFLOW_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli workflow pull <id> [--dir <path>]',
-    '  $ n8n-cli workflow pull --all [--dir <path>] [--existing]',
+    '  $ n8n-cli workflow pull --all [--dir <path>] [--existing] [--project <name>]',
     '',
     'FLAGS',
-    '  --all              Pull all workflows',
-    '  --existing         Only update workflows that already exist locally (--all only)',
-    `  --dir <path>       Target directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
-    '  --env <name>       Environment name',
-    '  --env-file <path>  Load a specific .env file',
+    '  --all                Pull all workflows',
+    '  --existing           Only update workflows that already exist locally (--all only)',
+    '  --project <name>     Only pull workflows owned by this project (--all only)',
+    `  --dir <path>         Target directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
+    '  --env <name>         Environment name',
+    '  --env-file <path>    Load a specific .env file',
     '',
     'DESCRIPTION',
     `  Saves each workflow to <dir>/<id>.json (default: ./${DEFAULT_WORKFLOWS_DIR}).`,
     '',
     '  With --existing (--all only), workflows not present locally or in the manifest',
     '  are skipped. Useful for syncing without pulling down instance-only workflows.',
+    '',
+    '  With --project <name> (--all only), only workflows owned by the named project',
+    '  are pulled. Accepts project name (case-insensitive) or project ID.',
   ],
   push: [
     'Push a workflow file to an n8n instance (create or update)',
@@ -575,7 +579,7 @@ if (args[0] === 'workflow' && args[1] === 'deactivate') {
 // workflow pull --all
 if (args[0] === 'workflow' && args[1] === 'pull' && all) {
   const manifest = readManifest();
-  const ok = pullAllWorkflows(workflowsDir, currentEnvName, manifest, env, { existing });
+  const ok = pullAllWorkflows(workflowsDir, currentEnvName, manifest, env, { existing, project });
   writeManifest(manifest);
   process.exit(ok ? 0 : 1);
 }

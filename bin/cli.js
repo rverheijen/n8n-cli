@@ -166,10 +166,8 @@ const WORKFLOW_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli workflow deactivate <file|id> [--env <name>]',
-    '  $ n8n-cli workflow deactivate --all     [--env <name>]',
     '',
     'FLAGS',
-    '  --all              Deactivate all workflows in the manifest',
     '  --env <name>       Environment name',
     '  --env-file <path>  Load a specific .env file',
   ],
@@ -354,7 +352,6 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
     `  workflow diff --all           Diff all local workflows against remote\n` +
     `  workflow activate <file|id>   Activate a workflow\n` +
     `  workflow deactivate <file|id> Deactivate a workflow\n` +
-    `  workflow deactivate --all     Deactivate all workflows in the manifest\n` +
     `  workflow test <file>          Trigger webhook and report result\n`,
   );
   process.exit(result.status ?? 0);
@@ -394,30 +391,6 @@ if (args[0] === 'workflow' && args[1] === 'activate') {
     process.exit(1);
   }
   process.exit(activateWorkflow(remoteId, env) ? 0 : 1);
-}
-
-// workflow deactivate --all
-if (args[0] === 'workflow' && args[1] === 'deactivate' && all) {
-  const manifest  = readManifest();
-  const workflows = getSection(manifest, currentEnvName, 'workflows');
-  const entries   = Object.entries(workflows);
-  if (entries.length === 0) {
-    console.log(`No workflows in manifest for env: ${currentEnvName}`);
-    process.exit(0);
-  }
-  console.log(`Deactivating ${entries.length} workflow(s) in env: ${currentEnvName}\n`);
-  let ok = 0, failed = 0;
-  for (const [filename, remoteId] of entries) {
-    if (deactivateWorkflow(String(remoteId), env)) {
-      console.log(`Deactivated  ${filename} (${remoteId})`);
-      ok++;
-    } else {
-      console.error(`Failed       ${filename} (${remoteId})`);
-      failed++;
-    }
-  }
-  console.log(`\n${ok} deactivated${failed > 0 ? `, ${failed} failed` : ''}`);
-  process.exit(failed > 0 ? 1 : 0);
 }
 
 // workflow deactivate <file|id>

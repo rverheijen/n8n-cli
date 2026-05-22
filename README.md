@@ -33,7 +33,7 @@ npm uninstall -g n8n-cli
 | `workflow diff --all` | Compare all local files against remote |
 | `workflow activate <file\|id>` | Activate a workflow (accepts filename or raw ID) |
 | `workflow deactivate <file\|id>` | Deactivate a workflow |
-| `workflow deactivate --all` | Deactivate all workflows in the manifest |
+
 | `workflow test <file>` | Trigger a workflow webhook and report the result |
 | `variable pull` | Fetch all variables |
 | `variable push [<file>]` | Push variables (create or update) |

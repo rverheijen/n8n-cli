@@ -7,31 +7,46 @@ This guide explains how to use `n8n-cli` with GitHub Actions to validate, deploy
 ## How it works
 
 ```mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#F4F7FA',
+    'primaryTextColor': '#1E293B',
+    'primaryBorderColor': '#CBD5E1',
+    'lineColor': '#64748B',
+    'secondaryColor': '#E2E8F0',
+    'tertiaryColor': '#FFFFFF'
+  }
+}}%%
+
 graph LR
     %% Left Trigger
-    Dev[Developer pushes code] --> Git
+    Dev["👤 Developer<br>pushes code"] --> Git
 
     %% Main Repository Box
-    subgraph Git ["Git repo<br>n8n/"]
+    subgraph Git ["📁 Git Repository (n8n/)"]
         direction TB
-        Tree["├── workflows/<br>├── data-tables/<br>├── variables.json<br>└── n8n-cli.manifest.json"]
+        Tree["📄 workflows/<br>📄 data-tables/<br>📄 variables.json<br>⚙️ n8n-cli.manifest.json"]
     end
 
     %% Process Boxes
-    CI["CI: validate<br>Changed workflow files"]
-    CD["CD: deploy<br>1. variable push<br>2. data-table push<br>3. workflow push --all"]
+    CI["📋 CI: Validate<br><small>• Check changed workflow files</small>"]
+    CD["🚀 CD: Deploy<br><small>1. Variable push<br>2. Data-table push<br>3. Workflow push --all</small>"]
 
     %% Connections
     Git -->|PR opened| CI
     Git -->|Merge to main| CD
-    CD -->|manifest committed back| Git
+    CD -->|Manifest committed back| Git
 
-    %% Styling for clean, minimal look
-    style Dev fill:none,stroke:none
-    style Tree text-align:left,fill:none,stroke:none
-    style Git fill:#fff,stroke:#333,stroke-width:2px,rx:10px,ry:10px
-    style CI fill:#fff,stroke:#333,stroke-width:2px,rx:8px,ry:8px,text-align:left
-    style CD fill:#fff,stroke:#333,stroke-width:2px,rx:8px,ry:8px,text-align:left
+    %% Styling
+    style Dev fill:none,stroke:none,font-weight:bold
+    style Tree text-align:left,fill:#FFFFFF,stroke:#E2E8F0,stroke-width:1px,border-radius:4px
+    style Git fill:#F8FAFC,stroke:#94A3B8,stroke-width:2px,rx:8px,ry:8px
+    style CI fill:#FFFFFF,stroke:#64748B,stroke-width:2px,rx:6px,ry:6px,text-align:left
+    style CD fill:#FFFFFF,stroke:#2563EB,stroke-width:2px,rx:6px,ry:6px,text-align:left
+
+    %% Link styling for smoother lines
+    linkStyle default stroke:#64748B,stroke-width:2px,color:#475569
 ```
 
 Deployment order matters: variables and data tables are pushed first so workflows can reference them at runtime.

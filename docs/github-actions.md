@@ -758,6 +758,73 @@ n8n-cli data-table push --all --env-file .env.client-a
 
 From this point on, GitHub Actions handles deployments on every push to main.
 
+### Adding a new promotion environment
+
+To add an environment to the sandbox → quality_assurance → production pipeline (e.g. inserting a `staging` environment between quality_assurance and production):
+
+1. Create a new GitHub Environment named `staging` and add its `N8N_API_URL` and `N8N_API_KEY` secrets.
+2. In `cd-promote.yml`, add a new job between `deploy-quality_assurance` and `deploy-production`:
+   ```yaml
+   deploy-staging:
+     name: Deploy to staging
+     needs: deploy-quality_assurance
+     environment: staging
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v4
+         with:
+           ref: ${{ github.ref }}
+       - uses: actions/setup-node@v4
+         with:
+           node-version: '20'
+       - name: Install n8n-cli
+         run: npm install -g github:rverheijen/n8n-cli
+       - name: Push tags
+         env:
+           N8N_API_URL: ${{ secrets.N8N_API_URL }}
+           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+         run: n8n-cli tag push --env staging
+       - name: Push variables
+         env:
+           N8N_API_URL: ${{ secrets.N8N_API_URL }}
+           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+         run: n8n-cli variable push --env staging
+       - name: Push data tables
+         env:
+           N8N_API_URL: ${{ secrets.N8N_API_URL }}
+           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+         run: n8n-cli data-table push --all --env staging
+       - name: Push workflows
+         env:
+           N8N_API_URL: ${{ secrets.N8N_API_URL }}
+           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+         run: n8n-cli workflow push --all --activate --env staging
+       - name: Commit updated manifest
+         run: |
+           git config user.name "github-actions[bot]"
+           git config user.email "github-actions[bot]@users.noreply.github.com"
+           git add n8n/n8n-cli.manifest.json
+           git diff --staged --quiet || git commit -m "chore: update manifest [staging] [skip ci]"
+           git push
+   ```
+3. Update `deploy-production` to depend on the new job:
+   ```yaml
+   deploy-production:
+     needs: deploy-staging
+   ```
+4. Create `.env.staging` locally (gitignored) and set up credential mapping:
+   ```bash
+   n8n-cli credential map --env staging
+   # or: n8n-cli credential push --env staging
+   ```
+5. Run the initial deployment locally to populate the manifest:
+   ```bash
+   n8n-cli variable push --env staging
+   n8n-cli data-table push --all --env staging
+   n8n-cli workflow push --all --env staging
+   ```
+6. Commit the updated `n8n-cli.manifest.json` and `n8n-cli.mapping.json`.
+
 ---
 
 ## Troubleshooting

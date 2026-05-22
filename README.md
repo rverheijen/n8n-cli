@@ -115,7 +115,7 @@ Fetch a single workflow by ID and save it to `n8n/workflows/<id>.json`.
 
 ```bash
 n8n-cli workflow pull 1234
-n8n-cli workflow pull 1234 --dir ./backup
+n8n-cli workflow pull 1234 --env staging
 ```
 
 ### `workflow pull --all`

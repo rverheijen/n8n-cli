@@ -407,16 +407,16 @@ if (args[0] === 'workflow' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  workflow pull <id>            Fetch a workflow by ID\n` +
-    `  workflow pull --all           Fetch all workflows\n` +
-    `  workflow push <file>          Push a workflow file (create or update)\n` +
-    `  workflow push --all           Push all workflows\n` +
-    `  workflow validate <file>      Validate a workflow JSON file\n` +
-    `  workflow diff <file>          Compare local file against remote\n` +
-    `  workflow diff --all           Diff all local workflows against remote\n` +
-    `  workflow activate <file|id>   Activate a workflow\n` +
-    `  workflow deactivate <file|id> Deactivate a workflow\n` +
-    `  workflow test <file>          Trigger webhook and report result\n`,
+    `  workflow pull <id>    Fetch a workflow by ID\n` +
+    `  workflow pull --all   Fetch all workflows\n` +
+    `  workflow push <file>  Push a workflow file (create or update)\n` +
+    `  workflow push --all   Push all workflows\n` +
+    `  workflow validate     Validate a workflow JSON file\n` +
+    `  workflow diff <file>  Compare local file against remote\n` +
+    `  workflow diff --all   Diff all local workflows against remote\n` +
+    `  workflow activate     Activate a workflow\n` +
+    `  workflow deactivate   Deactivate a workflow\n` +
+    `  workflow test         Trigger webhook and report result\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -688,8 +688,8 @@ if (args[0] === 'variable' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  variable pull  Fetch all variables\n` +
-    `  variable push  Push variables (create or update)\n`,
+    `  variable pull    Fetch all variables\n` +
+    `  variable push    Push variables (create or update)\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -782,9 +782,9 @@ if (args[0] === 'credential' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  credential pull  Fetch all credentials (metadata only)\n` +
-    `  credential push  Create credential stubs and update mapping\n` +
-    `  credential map   Match credentials by name+type, update mapping\n`,
+    `  credential pull      Fetch all credentials (metadata only)\n` +
+    `  credential push      Create credential stubs and update mapping\n` +
+    `  credential map       Match credentials by name+type, update mapping\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -835,8 +835,8 @@ if (args[0] === 'tag' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  tag pull  Fetch all tags\n` +
-    `  tag push  Push tags (create missing, skip existing)\n`,
+    `  tag pull    Fetch all tags\n` +
+    `  tag push    Push tags (create missing, skip existing)\n`,
   );
   process.exit(result.status ?? 0);
 }

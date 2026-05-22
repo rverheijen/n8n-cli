@@ -93,6 +93,7 @@ n8n-cli credential map --dir n8n/credentials --env instance-a  # match from per-
 n8n-cli tag pull
 n8n-cli tag pull --dir n8n/tags                  # one file per tag
 n8n-cli tag push
+n8n-cli tag push --dir n8n/tags                  # push from per-file directory
 n8n-cli tag push --prune                         # also delete remote-only tags (removes from all workflows)
 ```
 

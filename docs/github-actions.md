@@ -439,7 +439,7 @@ on:
       - 'n8n/variables.json'
   workflow_dispatch:
     inputs:
-      client:
+      instance:
         description: 'Deploy to a specific instance only (leave empty to deploy all)'
         required: false
 
@@ -447,7 +447,7 @@ jobs:
   deploy:
     strategy:
       matrix:
-        client: [instance-a, instance-b, instance-c]
+        instance: [instance-a, instance-b, instance-c]
       max-parallel: 1       # sequential, prevents manifest commit conflicts
       fail-fast: false      # continue deploying remaining instances if one fails
     environment: ${{ matrix.instance }}

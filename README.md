@@ -176,7 +176,7 @@ Exits `1` if differences are found, `0` if up to date. Useful for spotting workf
 
 Example output:
 
-```
+```text
 1234.json vs remote (env: staging)
 
   name: "Old Name" -> "New Name"
@@ -292,7 +292,7 @@ Exits `1` if differences are found, `0` if up to date.
 
 Example output:
 
-```
+```text
 variables.json vs remote (env: staging)
 
   + NEW_KEY
@@ -450,7 +450,7 @@ Tags are stored in `n8n/tags.json` as a flat list:
 
 When `--dir` points to a directory (no `.json` extension), each tag is stored in its own file instead:
 
-```
+```text
 n8n/tags/
   production.json
   sap_s_4hana.json

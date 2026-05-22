@@ -59,10 +59,10 @@ your-project/
 │   └── mapping.json                credential ID mapping per environment
 ├── n8n/
 │   ├── workflows/
-│   │   ├── my-workflow.json
-│   │   └── another-workflow.json
+│   │   ├── invoice_processing.json
+│   │   └── send_notification.json
 │   ├── data-tables/
-│   │   └── settings.json           schema + seed rows for each data table
+│   │   └── my_settings.json        schema + seed rows for each data table
 │   ├── variables.json              instance variables (key/value pairs)
 │   ├── tags.json                   tag names used across workflows
 │   └── credentials.json            credential metadata (id, name, type, no secrets)
@@ -677,9 +677,9 @@ The manifest grows one section per environment:
 
 ```json
 {
-  "sandbox":    { "workflows": { "my-workflow.json": "wf-abc" } },
-  "quality_assurance":         { "workflows": { "my-workflow.json": "wf-def" } },
-  "production": { "workflows": { "my-workflow.json": "wf-xyz" } }
+  "sandbox":           { "workflows": { "invoice_processing.json": "wf-abc" } },
+  "quality_assurance": { "workflows": { "invoice_processing.json": "wf-def" } },
+  "production":        { "workflows": { "invoice_processing.json": "wf-xyz" } }
 }
 ```
 
@@ -708,12 +708,12 @@ n8n-cli credential pull
 n8n-cli credential map --env staging     # or: credential push --env staging
 
 # Check for instance changes before editing locally
-n8n-cli workflow diff n8n/workflows/my-workflow.json
+n8n-cli workflow diff n8n/workflows/invoice_processing.json
 
 # Edit files in n8n/workflows/, n8n/data-tables/, n8n/variables.json
 
 # Validate workflows before committing
-n8n-cli workflow validate n8n/workflows/my-workflow.json
+n8n-cli workflow validate n8n/workflows/invoice_processing.json
 
 # Push to staging to test
 n8n-cli variable push --env staging
@@ -721,11 +721,11 @@ n8n-cli data-table push --all --env staging
 n8n-cli workflow push --all --env staging
 
 # Smoke test a webhook workflow
-n8n-cli workflow test n8n/workflows/1234.json --env staging
+n8n-cli workflow test n8n/workflows/invoice_processing.json --env staging
 
 # Commit and push; GitHub Actions handles the rest
 git add n8n/
-git commit -m "feat: update my-workflow"
+git commit -m "feat: update invoice_processing workflow"
 git push
 ```
 

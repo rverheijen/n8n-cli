@@ -208,7 +208,7 @@ Trigger a workflow via its webhook and report the HTTP result. Reads the local f
 n8n-cli workflow test n8n/workflows/my_workflow.json
 n8n-cli workflow test n8n/workflows/my_workflow.json --data '{"key":"value"}'
 n8n-cli workflow test n8n/workflows/my_workflow.json --prod
-n8n-cli workflow test n8n/workflows/1234.json --env staging
+n8n-cli workflow test n8n/workflows/my_workflow.json --env staging
 ```
 
 By default, the test webhook URL is used (`/webhook-test/<path>`). Pass `--prod` to use the production URL (`/webhook/<path>`).

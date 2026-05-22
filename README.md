@@ -168,8 +168,8 @@ n8n-cli workflow validate n8n/workflows/1234.json
 Compare a local workflow file against the version currently on the instance. Shows added, removed and changed nodes, connection changes, and metadata differences (name, settings, tags). Volatile fields like `updatedAt` and node positions are ignored.
 
 ```bash
-n8n-cli workflow diff n8n/workflows/1234.json
-n8n-cli workflow diff n8n/workflows/1234.json --env staging
+n8n-cli workflow diff n8n/workflows/invoice_processing.json
+n8n-cli workflow diff n8n/workflows/invoice_processing.json --env staging
 ```
 
 Exits `1` if differences are found, `0` if up to date. Useful for spotting workflows that were edited directly on the instance without the change being committed to git.
@@ -177,7 +177,7 @@ Exits `1` if differences are found, `0` if up to date. Useful for spotting workf
 Example output:
 
 ```text
-1234.json vs remote (env: staging)
+invoice_processing.json vs remote (env: staging)
 
   name: "Old Name" -> "New Name"
   + HTTP Request (n8n-nodes-base.httpRequest)
@@ -366,8 +366,8 @@ Pass `--prune` to also delete remote tables tracked in the manifest whose local 
 Compare a local data table file against the remote version. Shows column and row-level changes by `upsertKey`.
 
 ```bash
-n8n-cli data-table diff n8n/data-tables/settings.json
-n8n-cli data-table diff n8n/data-tables/settings.json --env staging
+n8n-cli data-table diff n8n/data-tables/my_settings.json
+n8n-cli data-table diff n8n/data-tables/my_settings.json --env staging
 ```
 
 ### `data-table diff --all`

@@ -1,6 +1,6 @@
 {
   "name": "n8n-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A custom wrapper around the official n8n-cli that injects our best practices into standard CLI commands.",
   "type": "module",
   "main": "bin/cli.js",

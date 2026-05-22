@@ -225,7 +225,7 @@ Each file in `n8n/data-tables/` defines one data table with its columns and seed
 
 ```json
 {
-  "name": "settings",
+  "name": "my_data_table",
   "columns": [
     { "name": "key",   "type": "string" },
     { "name": "value", "type": "string" }

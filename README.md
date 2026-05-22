@@ -125,6 +125,7 @@ Fetch all workflows from the instance and save each to `n8n/workflows/<name>.jso
 ```bash
 n8n-cli workflow pull --all
 n8n-cli workflow pull --all --env staging
+n8n-cli workflow pull --all --existing        # only update already-local workflows
 ```
 
 ### `workflow push <file>`
@@ -338,6 +339,7 @@ Fetch all data tables and save each to `n8n/data-tables/<name>.json`. Tables tha
 ```bash
 n8n-cli data-table pull --all
 n8n-cli data-table pull --all --env staging
+n8n-cli data-table pull --all --existing      # only update already-local tables
 ```
 
 ### `data-table push <file>`

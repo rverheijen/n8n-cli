@@ -29,6 +29,7 @@ Shell variables always take precedence over .env values.
 n8n-cli workflow pull <id>
 n8n-cli workflow pull --all
 n8n-cli workflow pull --all --env staging
+n8n-cli workflow pull --all --existing        # only update already-local workflows
 
 # Push (create or update via manifest)
 n8n-cli workflow push <file>
@@ -67,6 +68,7 @@ n8n-cli variable diff                 # show +/-/~ differences, exits 1 if any
 ```bash
 n8n-cli data-table pull <name>
 n8n-cli data-table pull --all
+n8n-cli data-table pull --all --existing      # only update already-local tables
 n8n-cli data-table push <file>
 n8n-cli data-table push --all
 n8n-cli data-table push --all --prune

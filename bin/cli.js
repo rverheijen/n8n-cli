@@ -53,7 +53,7 @@ import {
 
 // --- Bootstrap ---
 
-const { remaining: args, envFile, envName, dir, all } = parseCustomFlags(process.argv.slice(2));
+const { remaining: args, envFile, envName, dir, all, existing } = parseCustomFlags(process.argv.slice(2));
 
 loadEnvFile(envFile, envName);
 
@@ -130,16 +130,20 @@ const WORKFLOW_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli workflow pull <id> [--dir <path>]',
-    '  $ n8n-cli workflow pull --all [--dir <path>]',
+    '  $ n8n-cli workflow pull --all [--dir <path>] [--existing]',
     '',
     'FLAGS',
     '  --all              Pull all workflows',
+    '  --existing         Only update workflows that already exist locally (--all only)',
     `  --dir <path>       Target directory  (default: ./${DEFAULT_WORKFLOWS_DIR})`,
     '  --env <name>       Environment name',
     '  --env-file <path>  Load a specific .env file',
     '',
     'DESCRIPTION',
     `  Saves each workflow to <dir>/<id>.json (default: ./${DEFAULT_WORKFLOWS_DIR}).`,
+    '',
+    '  With --existing (--all only), workflows not present locally or in the manifest',
+    '  are skipped. Useful for syncing without pulling down instance-only workflows.',
   ],
   push: [
     'Push a workflow file to an n8n instance (create or update)',
@@ -307,10 +311,11 @@ const DATA_TABLE_HELP = {
     '',
     'USAGE',
     '  $ n8n-cli data-table pull <name> [--dir <path>]',
-    '  $ n8n-cli data-table pull --all  [--dir <path>]',
+    '  $ n8n-cli data-table pull --all  [--dir <path>] [--existing]',
     '',
     'FLAGS',
     '  --all              Pull all data tables',
+    '  --existing         Only update data tables that already exist locally (--all only)',
     `  --dir <path>       Target directory  (default: ./${DEFAULT_DATA_TABLES_DIR})`,
     '  --env <name>       Environment name',
     '  --env-file <path>  Load a specific .env file',
@@ -318,6 +323,9 @@ const DATA_TABLE_HELP = {
     'DESCRIPTION',
     '  Saves the table name, columns, upsertKey, and all rows to a JSON file.',
     '  With --all, fetches every data table to the target directory.',
+    '',
+    '  With --existing (--all only), data tables not present locally or in the manifest',
+    '  are skipped. Useful for syncing without pulling down instance-only tables.',
   ],
   push: [
     'Push a data table file (create table if missing, upsert rows)',
@@ -567,7 +575,7 @@ if (args[0] === 'workflow' && args[1] === 'deactivate') {
 // workflow pull --all
 if (args[0] === 'workflow' && args[1] === 'pull' && all) {
   const manifest = readManifest();
-  const ok = pullAllWorkflows(workflowsDir, currentEnvName, manifest, env);
+  const ok = pullAllWorkflows(workflowsDir, currentEnvName, manifest, env, { existing });
   writeManifest(manifest);
   process.exit(ok ? 0 : 1);
 }
@@ -887,7 +895,7 @@ if (args[0] === 'data-table' && (args[1] === '--help' || args[1] === '-h')) {
 // data-table pull --all
 if (args[0] === 'data-table' && args[1] === 'pull' && all) {
   const manifest = readManifest();
-  const ok = pullAllDataTables(tablesDir, currentEnvName, manifest, env);
+  const ok = pullAllDataTables(tablesDir, currentEnvName, manifest, env, { existing });
   writeManifest(manifest);
   process.exit(ok ? 0 : 1);
 }

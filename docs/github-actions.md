@@ -245,7 +245,7 @@ Each file in `n8n/data-tables/` defines one data table with its columns and seed
 | Command | Description |
 |---|---|
 | `data-table pull <name>` | Fetch a single data table by name |
-| `data-table pull --all` | Fetch all data tables |
+| `data-table pull --all [--existing]` | Fetch all data tables (--existing skips new remote-only tables) |
 | `data-table push <file>` | Push a data table (create if missing, upsert rows) |
 | `data-table push --all` | Push all data tables in the source directory |
 | `data-table push --all --prune` | Push all and delete remote-only tables |
@@ -255,6 +255,7 @@ Each file in `n8n/data-tables/` defines one data table with its columns and seed
 ```bash
 n8n-cli data-table pull my_data_table
 n8n-cli data-table pull --all
+n8n-cli data-table pull --all --existing      # only update already-local tables
 
 n8n-cli data-table push n8n/data-tables/my_data_table.json
 n8n-cli data-table push --all

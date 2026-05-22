@@ -273,7 +273,7 @@ Push variables to the instance. Creates missing variables, updates existing ones
 ```bash
 n8n-cli variable push
 n8n-cli variable push --env instance-a
-n8n-cli variable push path/to/vars.json --env instance-a
+n8n-cli variable push n8n/variables.json --env instance-a
 n8n-cli variable push --prune
 ```
 
@@ -418,7 +418,7 @@ Create empty credential stubs on a target instance for each entry in `credential
 
 ```bash
 n8n-cli credential push --env instance-a
-n8n-cli credential push path/to/credentials.json --env instance-a
+n8n-cli credential push n8n/credentials.json --env instance-a
 n8n-cli credential push --dir n8n/credentials --env instance-a
 ```
 

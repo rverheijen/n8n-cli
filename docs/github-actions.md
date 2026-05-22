@@ -694,6 +694,20 @@ n8n-cli credential map --env production
 
 ---
 
+## Execution commands
+
+`--workflow` accepts a local filename and resolves it to the remote ID via the manifest. All other flags pass through to the official CLI unchanged.
+
+```bash
+n8n-cli execution list
+n8n-cli execution list --workflow n8n/workflows/my_workflow.json --status error
+n8n-cli execution list --workflow n8n/workflows/my_workflow.json --limit 20 --json
+n8n-cli execution get <id>
+n8n-cli execution get <id> --includeData --json
+```
+
+---
+
 ## Local development workflow
 
 ```bash

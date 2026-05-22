@@ -397,7 +397,7 @@ n8n-cli tag pull --dir n8n/tags   # one file per tag
 
 ### `tag push [<file>]`
 
-Push tags to the instance. Creates any tag that does not exist yet. Skips tags that already exist. Does not delete or rename tags.
+Push tags to the instance. Creates any tag that does not exist yet. Skips tags that already exist. Does not rename tags.
 
 ```bash
 n8n-cli tag push
@@ -405,6 +405,15 @@ n8n-cli tag push --env client-a
 n8n-cli tag push path/to/tags.json --env client-a
 n8n-cli tag push --dir n8n/tags --env client-a
 ```
+
+Pass `--prune` to delete remote tags that are not present in the local file:
+
+```bash
+n8n-cli tag push --prune
+n8n-cli tag push --prune --env client-a
+```
+
+> **Warning:** `--prune` removes the tag from every workflow that references it on the instance, not just the tag record itself.
 
 ---
 

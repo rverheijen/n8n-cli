@@ -53,7 +53,7 @@ your-project/
 │   └── workflows/
 │       ├── ci.yml                  validate on pull request
 │       ├── cd.yml                  deploy to single instance on merge
-│       └── cd-clients.yml          deploy to multiple client instances on merge
+│       └── cd-multi.yml            deploy to multiple instances on merge
 ├── .n8n_cli/
 │   ├── manifest.json               tracks workflow + data-table IDs per environment
 │   └── mapping.json                credential ID mapping per environment
@@ -67,7 +67,7 @@ your-project/
 │   ├── tags.json                   tag names used across workflows
 │   └── credentials.json            credential metadata (id, name, type — no secrets)
 ├── .env                            local dev (gitignored)
-├── .env.client-a                   local targeting of client-a (gitignored)
+├── .env.instance-a                   local targeting of instance-a (gitignored)
 └── .gitignore
 ```
 
@@ -115,9 +115,9 @@ Go to **Settings → Secrets and variables → Actions** and add:
 | `N8N_API_URL` | `https://your-instance.n8n.cloud` |
 | `N8N_API_KEY` | Your n8n API key |
 
-### Multiple client instances
+### Multiple instances
 
-Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment), one per client (**Settings → Environments**), each with its own `N8N_API_URL` and `N8N_API_KEY` secrets. You get deployment protection rules and approval gates per client.
+Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment), one per instance (**Settings → Environments**), each with its own `N8N_API_URL` and `N8N_API_KEY` secrets. You get deployment protection rules and approval gates per instance.
 
 ---
 
@@ -136,8 +136,8 @@ Use `credential map` to match by name and type:
 n8n-cli credential pull
 
 # Match against target by name+type and write the mapping
-n8n-cli credential map --env client-a
-n8n-cli credential map --env client-b
+n8n-cli credential map --env instance-a
+n8n-cli credential map --env instance-b
 ```
 
 ### Option B: Credentials don't exist on the target yet
@@ -149,8 +149,8 @@ Use `credential push` to create empty stubs and auto-populate the mapping:
 n8n-cli credential pull
 
 # Create stubs on target and write the mapping
-n8n-cli credential push --env client-a
-n8n-cli credential push --env client-b
+n8n-cli credential push --env instance-a
+n8n-cli credential push --env instance-b
 ```
 
 Then fill in the actual credential values on each target instance.
@@ -161,14 +161,14 @@ Edit `.n8n_cli/mapping.json` directly:
 
 ```json
 {
-  "client-a": {
+  "instance-a": {
     "credentials": {
-      "staging-cred-id": "client-a-cred-id"
+      "staging-cred-id": "instance-a-cred-id"
     }
   },
-  "client-b": {
+  "instance-b": {
     "credentials": {
-      "staging-cred-id": "client-b-cred-id"
+      "staging-cred-id": "instance-b-cred-id"
     }
   }
 }
@@ -177,7 +177,7 @@ Edit `.n8n_cli/mapping.json` directly:
 To find credential IDs on an instance:
 
 ```bash
-n8n-cli credential list --json --env-file .env.client-a
+n8n-cli credential list --json --env-file .env.instance-a
 ```
 
 The mapping is applied on every `workflow push`. After remapping, `n8n-cli` checks that all credential IDs in the workflow exist on the target. Missing IDs print a warning but the push continues.
@@ -204,15 +204,15 @@ The mapping is applied on every `workflow push`. After remapping, `n8n-cli` chec
 
 ```bash
 n8n-cli variable pull
-n8n-cli variable pull --env client-a
+n8n-cli variable pull --env instance-a
 
 n8n-cli variable push
-n8n-cli variable push --env client-a
+n8n-cli variable push --env instance-a
 n8n-cli variable push --prune
-n8n-cli variable push path/to/vars.json --env client-a
+n8n-cli variable push path/to/vars.json --env instance-a
 
 n8n-cli variable diff
-n8n-cli variable diff --env client-a
+n8n-cli variable diff --env instance-a
 ```
 
 ---
@@ -254,7 +254,7 @@ n8n-cli data-table pull --all
 
 n8n-cli data-table push n8n/data-tables/settings.json
 n8n-cli data-table push --all
-n8n-cli data-table push --all --env client-a
+n8n-cli data-table push --all --env instance-a
 n8n-cli data-table push --all --prune
 
 n8n-cli data-table diff n8n/data-tables/settings.json
@@ -285,8 +285,8 @@ n8n-cli data-table diff --all
 n8n-cli credential pull
 
 # Set up the mapping for a target environment
-n8n-cli credential map --env client-a      # if credentials already exist on target
-n8n-cli credential push --env client-a     # if credentials need to be created on target
+n8n-cli credential map --env instance-a      # if credentials already exist on target
+n8n-cli credential push --env instance-a     # if credentials need to be created on target
 ```
 
 See [Credential mapping](#credential-mapping) above for the full setup workflow.
@@ -416,16 +416,16 @@ jobs:
 
 ---
 
-### CD: Deploy to multiple client instances
+### CD: Deploy to multiple instances
 
-**`.github/workflows/cd-clients.yml`**
+**`.github/workflows/cd-multi.yml`**
 
-Deploys to all client instances sequentially on merge to `main`. Uses GitHub Environments so each client has its own `N8N_API_URL` and `N8N_API_KEY` secrets.
+Deploys to all instances sequentially on merge to `main`. Uses GitHub Environments so each instance has its own `N8N_API_URL` and `N8N_API_KEY` secrets.
 
-**Setup:** Create one GitHub Environment per client (**Settings → Environments**), named exactly as listed in the matrix (e.g. `client-a`, `client-b`). Add `N8N_API_URL` and `N8N_API_KEY` as secrets in each environment.
+**Setup:** Create one GitHub Environment per client (**Settings → Environments**), named exactly as listed in the matrix (e.g. `instance-a`, `instance-b`). Add `N8N_API_URL` and `N8N_API_KEY` as secrets in each environment.
 
 ```yaml
-name: Deploy to clients
+name: Deploy to instances
 
 on:
   push:
@@ -438,17 +438,17 @@ on:
   workflow_dispatch:
     inputs:
       client:
-        description: 'Deploy to a specific client only (leave empty to deploy all)'
+        description: 'Deploy to a specific instance only (leave empty to deploy all)'
         required: false
 
 jobs:
   deploy:
     strategy:
       matrix:
-        client: [client-a, client-b, client-c]
+        client: [instance-a, instance-b, instance-c]
       max-parallel: 1       # sequential, prevents manifest commit conflicts
-      fail-fast: false      # continue deploying remaining clients if one fails
-    environment: ${{ matrix.client }}
+      fail-fast: false      # continue deploying remaining instances if one fails
+    environment: ${{ matrix.instance }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -462,40 +462,40 @@ jobs:
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli
 
-      - name: Push tags to ${{ matrix.client }}
+      - name: Push tags to ${{ matrix.instance }}
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli tag push --env ${{ matrix.client }}
+        run: n8n-cli tag push --env ${{ matrix.instance }}
 
-      - name: Push variables to ${{ matrix.client }}
+      - name: Push variables to ${{ matrix.instance }}
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli variable push --env ${{ matrix.client }}
+        run: n8n-cli variable push --env ${{ matrix.instance }}
 
-      - name: Push data tables to ${{ matrix.client }}
+      - name: Push data tables to ${{ matrix.instance }}
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli data-table push --all --env ${{ matrix.client }}
+        run: n8n-cli data-table push --all --env ${{ matrix.instance }}
 
-      - name: Push workflows to ${{ matrix.client }}
+      - name: Push workflows to ${{ matrix.instance }}
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli workflow push --all --activate --env ${{ matrix.client }}
+        run: n8n-cli workflow push --all --activate --env ${{ matrix.instance }}
 
       - name: Commit updated manifest
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .n8n_cli/manifest.json
-          git diff --staged --quiet || git commit -m "chore: update manifest [${{ matrix.client }}] [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: update manifest [${{ matrix.instance }}] [skip ci]"
           git push
 ```
 
-> **Why `max-parallel: 1`?** Each deploy job reads and writes the shared `.n8n_cli/manifest.json`. Running them in parallel causes git push conflicts on the manifest commit. Running sequentially means each job picks up the manifest entries from the previous client.
+> **Why `max-parallel: 1`?** Each deploy job reads and writes the shared `.n8n_cli/manifest.json`. Running them in parallel causes git push conflicts on the manifest commit. Running sequentially means each job picks up the manifest entries from the previous instance.
 
 ---
 
@@ -727,33 +727,33 @@ git commit -m "feat: update my-workflow"
 git push
 ```
 
-For multiple clients locally, use `.env` files:
+For multiple instances locally, use `.env` files:
 
 ```bash
-n8n-cli workflow push --all --env-file .env.client-a
-n8n-cli variable push --env-file .env.client-a
-n8n-cli data-table push --all --env-file .env.client-a
+n8n-cli workflow push --all --env-file .env.instance-a
+n8n-cli variable push --env-file .env.instance-a
+n8n-cli data-table push --all --env-file .env.instance-a
 ```
 
 ---
 
-## Adding a new client
+## Adding a new instance
 
-1. Create a new GitHub Environment named `client-x` and add its `N8N_API_URL` and `N8N_API_KEY` secrets.
-2. Add `client-x` to the matrix in `cd-clients.yml`.
-3. Create `.env.client-x` locally (gitignored) for local access.
-4. Pull credential metadata from the source instance and set up the mapping for `client-x`:
+1. Create a new GitHub Environment named `instance-x` and add its `N8N_API_URL` and `N8N_API_KEY` secrets.
+2. Add `instance-x` to the matrix in `cd-multi.yml`.
+3. Create `.env.instance-x` locally (gitignored) for local access.
+4. Pull credential metadata from the source instance and set up the mapping for `instance-x`:
    ```bash
    n8n-cli credential pull
-   # Use 'map' if credentials already exist on client-x, or 'push' to create stubs:
-   n8n-cli credential map --env client-x
-   # or: n8n-cli credential push --env client-x
+   # Use 'map' if credentials already exist on instance-x, or 'push' to create stubs:
+   n8n-cli credential map --env instance-x
+   # or: n8n-cli credential push --env instance-x
    ```
 5. Run the initial deployment locally to populate the manifest:
    ```bash
-   n8n-cli variable push --env client-x
-   n8n-cli data-table push --all --env client-x
-   n8n-cli workflow push --all --env client-x
+   n8n-cli variable push --env instance-x
+   n8n-cli data-table push --all --env instance-x
+   n8n-cli workflow push --all --env instance-x
    ```
 6. Commit the updated `.n8n_cli/manifest.json` and `.n8n_cli/mapping.json`.
 
@@ -846,10 +846,10 @@ Tags are resolved by name on the target. If a tag doesn't exist it gets created.
 A warning means a credential ID in the workflow JSON has no mapping for the target environment. Add the mapping to `.n8n_cli/mapping.json`. The workflow is still pushed, but the credential reference will be incorrect until the mapping is added.
 
 **`Error: env file not found`**
-You used `--env-file .env.client-a` but the file doesn't exist. Either create the file or use `--env client-a` (which only requires the file if it exists, and falls back to shell env vars).
+You used `--env-file .env.instance-a` but the file doesn't exist. Either create the file or use `--env instance-a` (which only requires the file if it exists, and falls back to shell env vars).
 
 **Manifest commit is failing in CI**
 Check that **Workflow permissions** is set to **Read and write** in repository settings (Settings → Actions → General).
 
-**A client deployment failed mid-run**
-Because `fail-fast: false` is set, other clients continue deploying. The failed client's resources may be partially updated. Check the job logs and re-run the failed job once the issue is resolved.
+**An instance deployment failed mid-run**
+Because `fail-fast: false` is set, other instances continue deploying. The failed instance's resources may be partially updated. Check the job logs and re-run the failed job once the issue is resolved.

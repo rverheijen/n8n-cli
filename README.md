@@ -87,7 +87,7 @@ Use `--env-file` or `--env` to target a specific environment:
 
 ```bash
 n8n-cli workflow push --all --env-file .env.staging
-n8n-cli workflow push --all --env client-a        # loads .env.client-a if present
+n8n-cli workflow push --all --env instance-a        # loads .env.instance-a if present
 ```
 
 In CI (e.g. GitHub Actions), set `N8N_API_URL` and `N8N_API_KEY` as environment variables or secrets directly; no `.env` file needed.
@@ -145,7 +145,7 @@ Push all `.json` files from `n8n/workflows/` to the instance.
 
 ```bash
 n8n-cli workflow push --all
-n8n-cli workflow push --all --env client-a
+n8n-cli workflow push --all --env instance-a
 n8n-cli workflow push --all --activate
 n8n-cli workflow push --all --activate --prune
 ```
@@ -272,8 +272,8 @@ Push variables to the instance. Creates missing variables, updates existing ones
 
 ```bash
 n8n-cli variable push
-n8n-cli variable push --env client-a
-n8n-cli variable push path/to/vars.json --env client-a
+n8n-cli variable push --env instance-a
+n8n-cli variable push path/to/vars.json --env instance-a
 n8n-cli variable push --prune
 ```
 
@@ -346,7 +346,7 @@ Push a data table file. Creates the table if it doesn't exist, then upserts all 
 
 ```bash
 n8n-cli data-table push n8n/data-tables/settings.json
-n8n-cli data-table push n8n/data-tables/settings.json --env client-a
+n8n-cli data-table push n8n/data-tables/settings.json --env instance-a
 ```
 
 ### `data-table push --all`
@@ -355,7 +355,7 @@ Push all data table files from `n8n/data-tables/`.
 
 ```bash
 n8n-cli data-table push --all
-n8n-cli data-table push --all --env client-a
+n8n-cli data-table push --all --env instance-a
 n8n-cli data-table push --all --prune
 ```
 
@@ -417,9 +417,9 @@ n8n-cli credential pull --dir n8n/credentials   # one file per credential
 Create empty credential stubs on a target instance for each entry in `credentials.json`. Updates `.n8n_cli/mapping.json` with the source->target ID mapping. Already-mapped credentials are skipped.
 
 ```bash
-n8n-cli credential push --env client-a
-n8n-cli credential push path/to/credentials.json --env client-a
-n8n-cli credential push --dir n8n/credentials --env client-a
+n8n-cli credential push --env instance-a
+n8n-cli credential push path/to/credentials.json --env instance-a
+n8n-cli credential push --dir n8n/credentials --env instance-a
 ```
 
 After pushing, fill in the actual credential values on the target instance.
@@ -429,8 +429,8 @@ After pushing, fill in the actual credential values on the target instance.
 Match credentials that already exist on both instances by name and type, and write the mapping to `.n8n_cli/mapping.json`. No stubs are created.
 
 ```bash
-n8n-cli credential map --env client-a
-n8n-cli credential map --dir n8n/credentials --env client-a
+n8n-cli credential map --env instance-a
+n8n-cli credential map --dir n8n/credentials --env instance-a
 ```
 
 Use this when credentials already exist on both instances and you just need to link the IDs.
@@ -472,16 +472,16 @@ Push tags to the instance. Creates any tag that does not exist yet. Skips tags t
 
 ```bash
 n8n-cli tag push
-n8n-cli tag push --env client-a
-n8n-cli tag push path/to/tags.json --env client-a
-n8n-cli tag push --dir n8n/tags --env client-a
+n8n-cli tag push --env instance-a
+n8n-cli tag push path/to/tags.json --env instance-a
+n8n-cli tag push --dir n8n/tags --env instance-a
 ```
 
 Pass `--prune` to delete remote tags that are not present in the local file:
 
 ```bash
 n8n-cli tag push --prune
-n8n-cli tag push --prune --env client-a
+n8n-cli tag push --prune --env instance-a
 ```
 
 > **Warning:** `--prune` removes the tag from every workflow that references it on the instance, not just the tag record itself.
@@ -498,7 +498,7 @@ n8n-cli tag push --prune --env client-a
     "workflows":    { "1234.json": "wf-abc" },
     "data-tables":  { "settings.json": "dt-xyz" }
   },
-  "client-a": {
+  "instance-a": {
     "workflows":    { "1234.json": "wf-def" },
     "data-tables":  { "settings.json": "dt-uvw" }
   }
@@ -517,9 +517,9 @@ Create `.n8n_cli/mapping.json` and commit it (it contains only IDs, no secrets):
 
 ```json
 {
-  "client-a": {
+  "instance-a": {
     "credentials": {
-      "staging-cred-id": "client-a-cred-id"
+      "staging-cred-id": "instance-a-cred-id"
     }
   }
 }
@@ -540,7 +540,7 @@ See [docs/github-actions.md](./docs/github-actions.md) for a full guide includin
 - Setting up GitHub Secrets
 - CI workflow (validate + diff on pull request)
 - CD workflow (deploy on merge to main)
-- Multi-client deployment with GitHub Environments
+- Multi-instance deployment with GitHub Environments
 - Credential mapping setup
 - Troubleshooting
 

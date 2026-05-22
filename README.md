@@ -54,9 +54,9 @@ This installs the official skill and extends it with all wrapper commands so you
 | `data-table push --all` | Push all data tables in the source directory |
 | `data-table diff <file>` | Compare a local data table against remote |
 | `data-table diff --all` | Compare all local data tables against remote |
-| `credential pull` | Fetch credential metadata (no secrets) |
-| `credential push [<file>]` | Create credential stubs on target and update mapping |
-| `credential map` | Match credentials by name and type, update mapping |
+| `credential pull [--dir <path>]` | Fetch credential metadata (no secrets) |
+| `credential push [<file>] [--dir <path>]` | Create credential stubs on target and update mapping |
+| `credential map [--dir <path>]` | Match credentials by name and type, update mapping |
 | `tag pull` | Fetch all tags |
 | `tag push [<file>]` | Create missing tags on the instance |
 | `execution list` | List executions (`--workflow` accepts a filename) |

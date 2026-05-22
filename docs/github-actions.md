@@ -181,6 +181,8 @@ The mapping is applied on every `workflow push`. After remapping, `n8n-cli` chec
 |---|---|
 | `variable pull` | Fetch all variables and save to `n8n/variables.json` |
 | `variable push [<file>]` | Push variables — creates missing, updates existing |
+| `variable push --prune` | Push variables and delete remote-only variables |
+| `variable diff [<file>]` | Compare local variables against remote |
 
 ```bash
 n8n-cli variable pull
@@ -188,7 +190,11 @@ n8n-cli variable pull --env client-a
 
 n8n-cli variable push
 n8n-cli variable push --env client-a
+n8n-cli variable push --prune
 n8n-cli variable push path/to/vars.json --env client-a
+
+n8n-cli variable diff
+n8n-cli variable diff --env client-a
 ```
 
 ---
@@ -220,6 +226,9 @@ Each file in `n8n/data-tables/` defines one data table with its columns and seed
 | `data-table pull --all` | Fetch all data tables |
 | `data-table push <file>` | Push a data table (create if missing, upsert rows) |
 | `data-table push --all` | Push all data tables in the source directory |
+| `data-table push --all --prune` | Push all and delete remote-only tables |
+| `data-table diff <file>` | Compare a local data table against remote |
+| `data-table diff --all` | Compare all local data tables against remote |
 
 ```bash
 n8n-cli data-table pull settings
@@ -228,6 +237,10 @@ n8n-cli data-table pull --all
 n8n-cli data-table push n8n/data-tables/settings.json
 n8n-cli data-table push --all
 n8n-cli data-table push --all --env client-a
+n8n-cli data-table push --all --prune
+
+n8n-cli data-table diff n8n/data-tables/settings.json
+n8n-cli data-table diff --all
 ```
 
 ---
@@ -247,7 +260,7 @@ n8n-cli data-table push --all --env client-a
 |---|---|
 | `credential pull` | Fetch credential metadata from the instance |
 | `credential push [<file>]` | Create stubs on target and populate the mapping |
-| `credential map [<file>]` | Match credentials by name+type and update mapping |
+| `credential map` | Match credentials by name+type and update mapping |
 
 ```bash
 # Pull metadata from the source instance
@@ -372,7 +385,7 @@ jobs:
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli workflow push --all
+        run: n8n-cli workflow push --all --activate
 
       - name: Commit updated manifest
         run: |
@@ -453,7 +466,7 @@ jobs:
         env:
           N8N_API_URL: ${{ secrets.N8N_API_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-        run: n8n-cli workflow push --all --env ${{ matrix.client }}
+        run: n8n-cli workflow push --all --activate --env ${{ matrix.client }}
 
       - name: Commit updated manifest
         run: |

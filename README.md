@@ -20,7 +20,7 @@ npm uninstall -g n8n-cli
 
 ## Use as skill with your coding agent
 
-Run this after installation to add the n8n-cli skill to your AI coding agent (Claude Code, Cursor, Windsurf):
+Run this after installation to use n8n-cli as a skill with your coding agent (Claude Code, Cursor, Windsurf):
 
 ```bash
 n8n-cli skill install          # install to the current project

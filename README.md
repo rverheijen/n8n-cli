@@ -231,8 +231,8 @@ Execution commands pass through to the official `@n8n/cli` with one enhancement:
 
 ```bash
 n8n-cli execution list
-n8n-cli execution list --workflow n8n/workflows/1234.json --status error
-n8n-cli execution list --workflow n8n/workflows/1234.json --limit 20 --json
+n8n-cli execution list --workflow n8n/workflows/my_workflow.json --status error
+n8n-cli execution list --workflow n8n/workflows/my_workflow.json --limit 20 --json
 ```
 
 ### `execution get <id>`

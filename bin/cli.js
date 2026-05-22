@@ -688,8 +688,8 @@ if (args[0] === 'variable' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  variable pull          Fetch all variables\n` +
-    `  variable push [<file>] Push variables (create or update)\n`,
+    `  variable pull  Fetch all variables\n` +
+    `  variable push  Push variables (create or update)\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -782,9 +782,9 @@ if (args[0] === 'credential' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  credential pull          Fetch all credentials (metadata only)\n` +
-    `  credential push [<file>] Create credential stubs and update mapping\n` +
-    `  credential map           Match credentials by name+type, update mapping\n`,
+    `  credential pull  Fetch all credentials (metadata only)\n` +
+    `  credential push  Create credential stubs and update mapping\n` +
+    `  credential map   Match credentials by name+type, update mapping\n`,
   );
   process.exit(result.status ?? 0);
 }
@@ -835,8 +835,8 @@ if (args[0] === 'tag' && (args[1] === '--help' || args[1] === '-h')) {
   process.stdout.write(result.stdout);
   process.stdout.write(
     'CUSTOM COMMANDS\n' +
-    `  tag pull          Fetch all tags\n` +
-    `  tag push [<file>] Push tags (create missing, skip existing)\n`,
+    `  tag pull  Fetch all tags\n` +
+    `  tag push  Push tags (create missing, skip existing)\n`,
   );
   process.exit(result.status ?? 0);
 }

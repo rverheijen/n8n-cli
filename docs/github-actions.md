@@ -59,7 +59,7 @@ your-project/
 │   └── mapping.json                credential ID mapping per environment
 ├── n8n/
 │   ├── workflows/
-│   │   ├── invoice_processing.json
+│   │   ├── my_workflow.json
 │   │   └── send_notification.json
 │   ├── data-tables/
 │   │   └── my_settings.json        schema + seed rows for each data table
@@ -677,9 +677,9 @@ The manifest grows one section per environment:
 
 ```json
 {
-  "sandbox":           { "workflows": { "invoice_processing.json": "wf-abc" } },
-  "quality_assurance": { "workflows": { "invoice_processing.json": "wf-def" } },
-  "production":        { "workflows": { "invoice_processing.json": "wf-xyz" } }
+  "sandbox":           { "workflows": { "my_workflow.json": "wf-abc" } },
+  "quality_assurance": { "workflows": { "my_workflow.json": "wf-def" } },
+  "production":        { "workflows": { "my_workflow.json": "wf-xyz" } }
 }
 ```
 
@@ -708,12 +708,12 @@ n8n-cli credential pull
 n8n-cli credential map --env staging     # or: credential push --env staging
 
 # Check for instance changes before editing locally
-n8n-cli workflow diff n8n/workflows/invoice_processing.json
+n8n-cli workflow diff n8n/workflows/my_workflow.json
 
 # Edit files in n8n/workflows/, n8n/data-tables/, n8n/variables.json
 
 # Validate workflows before committing
-n8n-cli workflow validate n8n/workflows/invoice_processing.json
+n8n-cli workflow validate n8n/workflows/my_workflow.json
 
 # Push to staging to test
 n8n-cli variable push --env staging
@@ -721,11 +721,11 @@ n8n-cli data-table push --all --env staging
 n8n-cli workflow push --all --env staging
 
 # Smoke test a webhook workflow
-n8n-cli workflow test n8n/workflows/invoice_processing.json --env staging
+n8n-cli workflow test n8n/workflows/my_workflow.json --env staging
 
 # Commit and push; GitHub Actions handles the rest
 git add n8n/
-git commit -m "feat: update invoice_processing workflow"
+git commit -m "feat: update my_workflow"
 git push
 ```
 

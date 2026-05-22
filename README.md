@@ -132,9 +132,9 @@ n8n-cli workflow pull --all --env staging
 Push a workflow file to the instance. Creates a new workflow on first push to an environment, updates it on subsequent pushes.
 
 ```bash
-n8n-cli workflow push n8n/workflows/invoice_processing.json
-n8n-cli workflow push n8n/workflows/invoice_processing.json --env staging
-n8n-cli workflow push n8n/workflows/invoice_processing.json --activate
+n8n-cli workflow push n8n/workflows/my_workflow.json
+n8n-cli workflow push n8n/workflows/my_workflow.json --env staging
+n8n-cli workflow push n8n/workflows/my_workflow.json --activate
 ```
 
 Pass `--activate` to activate the workflow after pushing. Only workflows that have `"active": true` in the local JSON are activated. Sub-workflows and manual-trigger workflows that were inactive when pulled are left inactive.
@@ -160,7 +160,7 @@ n8n-cli workflow push --all --activate --prune
 Validate a workflow JSON file. Checks for required fields (`name`, `nodes`, `connections`). Exits `1` on failure, useful as a CI gate on pull requests.
 
 ```bash
-n8n-cli workflow validate n8n/workflows/invoice_processing.json
+n8n-cli workflow validate n8n/workflows/my_workflow.json
 ```
 
 ### `workflow diff <file>`
@@ -168,8 +168,8 @@ n8n-cli workflow validate n8n/workflows/invoice_processing.json
 Compare a local workflow file against the version currently on the instance. Shows added, removed and changed nodes, connection changes, and metadata differences (name, settings, tags). Volatile fields like `updatedAt` and node positions are ignored.
 
 ```bash
-n8n-cli workflow diff n8n/workflows/invoice_processing.json
-n8n-cli workflow diff n8n/workflows/invoice_processing.json --env staging
+n8n-cli workflow diff n8n/workflows/my_workflow.json
+n8n-cli workflow diff n8n/workflows/my_workflow.json --env staging
 ```
 
 Exits `1` if differences are found, `0` if up to date. Useful for spotting workflows that were edited directly on the instance without the change being committed to git.
@@ -177,7 +177,7 @@ Exits `1` if differences are found, `0` if up to date. Useful for spotting workf
 Example output:
 
 ```text
-invoice_processing.json vs remote (env: staging)
+my_workflow.json vs remote (env: staging)
 
   name: "Old Name" -> "New Name"
   + HTTP Request (n8n-nodes-base.httpRequest)
@@ -193,8 +193,8 @@ invoice_processing.json vs remote (env: staging)
 Activate or deactivate a workflow. Accepts a local filename (resolved to a remote ID via the manifest or the `id` field in the JSON) or a raw workflow ID.
 
 ```bash
-n8n-cli workflow activate n8n/workflows/invoice_processing.json
-n8n-cli workflow deactivate n8n/workflows/invoice_processing.json --env staging
+n8n-cli workflow activate n8n/workflows/my_workflow.json
+n8n-cli workflow deactivate n8n/workflows/my_workflow.json --env staging
 n8n-cli workflow activate VCAF23eWI9yFfp1X          # raw ID
 ```
 
@@ -205,9 +205,9 @@ Use `deactivate` to take a workflow offline temporarily without deleting it.
 Trigger a workflow via its webhook and report the HTTP result. Reads the local file to find webhook trigger nodes, constructs the URL, sends the request, and exits `1` if any request returns 4xx/5xx or fails to connect.
 
 ```bash
-n8n-cli workflow test n8n/workflows/invoice_processing.json
-n8n-cli workflow test n8n/workflows/invoice_processing.json --data '{"key":"value"}'
-n8n-cli workflow test n8n/workflows/invoice_processing.json --prod
+n8n-cli workflow test n8n/workflows/my_workflow.json
+n8n-cli workflow test n8n/workflows/my_workflow.json --data '{"key":"value"}'
+n8n-cli workflow test n8n/workflows/my_workflow.json --prod
 n8n-cli workflow test n8n/workflows/1234.json --env staging
 ```
 

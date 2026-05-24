@@ -463,7 +463,7 @@ jobs:
 
 Deploys to all instances sequentially on merge to `main`. Uses GitHub Environments so each instance has its own `N8N_API_URL` and `N8N_API_KEY` secrets.
 
-**Setup:** Create one GitHub Environment per client (**Settings → Environments**), named exactly as listed in the matrix (e.g. `instance-a`, `instance-b`). Add `N8N_API_URL` and `N8N_API_KEY` as secrets in each environment.
+**Setup:** Create one GitHub Environment per instance (**Settings → Environments**), named exactly as listed in the matrix (e.g. `instance-a`, `instance-b`). Add `N8N_API_URL` and `N8N_API_KEY` as secrets in each environment.
 
 ```yaml
 name: Deploy to instances
@@ -494,7 +494,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}    # always pull latest to get previous client's manifest
+          ref: ${{ github.ref }}    # always pull latest to get previous instance's manifest
 
       - uses: actions/setup-node@v4
         with:

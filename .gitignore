@@ -1,5 +1,6 @@
 node_modules/
 .env*
+!.env.example
 .claude/skills/
 .n8n_cli/
 n8n/

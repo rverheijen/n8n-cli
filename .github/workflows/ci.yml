@@ -16,7 +16,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:yourusername/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
 
       - name: Validate changed workflows
         run: |
@@ -26,4 +26,17 @@ jobs:
             [ -f "$file" ] || continue
             echo "Validating $file..."
             n8n-cli workflow validate "$file"
+          done
+
+      - name: Diff changed workflows against remote
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'n8n/workflows/*.json' | \
+          while read file; do
+            [ -f "$file" ] || continue
+            echo "Diffing $file..."
+            n8n-cli workflow diff "$file" || true
           done

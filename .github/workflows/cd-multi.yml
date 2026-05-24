@@ -1,0 +1,68 @@
+name: Deploy to instances
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'n8n/workflows/**.json'
+      - 'n8n/data-tables/**.json'
+      - 'n8n/variables.json'
+  workflow_dispatch:
+    inputs:
+      instance:
+        description: 'Deploy to a specific instance only (leave empty to deploy all)'
+        required: false
+
+jobs:
+  deploy:
+    strategy:
+      matrix:
+        instance: [instance-a, instance-b, instance-c]
+      max-parallel: 1       # sequential, prevents manifest commit conflicts
+      fail-fast: false      # continue deploying remaining instances if one fails
+    environment: ${{ matrix.instance }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}    # always pull latest to get previous instance's manifest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli
+
+      - name: Push tags to ${{ matrix.instance }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli tag push --env ${{ matrix.instance }}
+
+      - name: Push variables to ${{ matrix.instance }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli variable push --env ${{ matrix.instance }}
+
+      - name: Push data tables to ${{ matrix.instance }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli data-table push --all --env ${{ matrix.instance }}
+
+      - name: Push workflows to ${{ matrix.instance }}
+        env:
+          N8N_API_URL: ${{ secrets.N8N_API_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-cli workflow push --all --activate --env ${{ matrix.instance }}
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .n8n_cli/manifest.json
+          git diff --staged --quiet || git commit -m "chore: update manifest [${{ matrix.instance }}] [skip ci]"
+          git push

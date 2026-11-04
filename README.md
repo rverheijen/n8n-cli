@@ -12,6 +12,15 @@ npm install -g github:rverheijen/n8n-cli
 
 Installs both this wrapper and the official `@n8n/cli` in one step. After installation, the `n8n-cli` command routes through this wrapper.
 
+The command above installs the latest code on `main`. To install a released version instead, append a tag or a semver range:
+
+```bash
+npm install -g github:rverheijen/n8n-cli#v1.4.2        # exact version
+npm install -g github:rverheijen/n8n-cli#semver:^1     # latest 1.x release
+```
+
+Releases are listed under [Tags](https://github.com/rverheijen/n8n-cli/tags). To update, run the install command again.
+
 ## Uninstall
 
 ```bash

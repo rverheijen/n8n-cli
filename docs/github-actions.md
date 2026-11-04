@@ -89,10 +89,12 @@ your-project/
 Add `n8n-cli` as a dev dependency so GitHub Actions can install it via `npm ci`:
 
 ```bash
-npm install --save-dev github:rverheijen/n8n-cli
+npm install --save-dev github:rverheijen/n8n-cli#semver:^1
 ```
 
 Or install it globally in each workflow step (see the workflow examples below).
+
+The examples pin `#semver:^1`, so pipelines get fixes from new 1.x releases but never a breaking 2.0. Use an exact tag such as `#v1.4.2` to lock a specific version.
 
 ### 2. Enable write permissions for the manifest commit
 
@@ -361,7 +363,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:rverheijen/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli#semver:^1
 
       - name: Validate changed workflows
         run: |
@@ -420,7 +422,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:rverheijen/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli#semver:^1
 
       - name: Push tags
         env:
@@ -501,7 +503,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:rverheijen/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli#semver:^1
 
       - name: Push tags to ${{ matrix.instance }}
         env:
@@ -577,7 +579,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:rverheijen/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli#semver:^1
 
       - name: Push tags
         env:
@@ -626,7 +628,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:rverheijen/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli#semver:^1
 
       - name: Push tags
         env:
@@ -675,7 +677,7 @@ jobs:
           node-version: '20'
 
       - name: Install n8n-cli
-        run: npm install -g github:rverheijen/n8n-cli
+        run: npm install -g github:rverheijen/n8n-cli#semver:^1
 
       - name: Push tags
         env:
@@ -838,7 +840,7 @@ To add an environment to the sandbox → quality_assurance → production pipeli
          with:
            node-version: '20'
        - name: Install n8n-cli
-         run: npm install -g github:rverheijen/n8n-cli
+         run: npm install -g github:rverheijen/n8n-cli#semver:^1
        - name: Push tags
          env:
            N8N_API_URL: ${{ secrets.N8N_API_URL }}

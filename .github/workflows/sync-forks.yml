@@ -27,6 +27,8 @@ jobs:
         include:
           - fork: bonana-agents/n8n-cli
             token: SYNC_TOKEN_BONANA
+          - fork: x-equipment/n8n-cli
+            token: SYNC_TOKEN_XEQUIPMENT
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,5 +55,9 @@ jobs:
           TAG: ${{ steps.tag.outputs.name }}
           FORK: ${{ matrix.fork }}
         run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Secret ${{ matrix.token }} is missing or empty"
+            exit 1
+          fi
           # No --force: main only fast-forwards, so a fork that drifted fails loudly.
           git push "https://x-access-token:${TOKEN}@github.com/$FORK.git" "$TAG^{commit}:refs/heads/main" "refs/tags/$TAG:refs/tags/$TAG"

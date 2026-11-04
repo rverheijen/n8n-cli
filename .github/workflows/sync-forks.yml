@@ -1,0 +1,60 @@
+name: Sync forks
+
+# Pushes each release (v* tag) to the organization forks: the fork's main is
+# fast-forwarded to the tagged commit and the tag itself is pushed.
+# Each fork has its own write deploy key, stored here as a secret.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to sync (defaults to the latest v* tag on main)
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: github.repository == 'rverheijen/n8n-cli'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - fork: bonana-agents/n8n-cli
+            key: SYNC_KEY_BONANA
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            TAG="${INPUT_TAG:-$(git describe --tags --abbrev=0 --match 'v*' origin/main)}"
+          fi
+          git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || { echo "::error::Tag $TAG not found"; exit 1; }
+          git merge-base --is-ancestor "$TAG^{commit}" origin/main || { echo "::error::$TAG is not on main"; exit 1; }
+          echo "name=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Push ${{ steps.tag.outputs.name }} to ${{ matrix.fork }}
+        env:
+          SSH_KEY: ${{ secrets[matrix.key] }}
+          TAG: ${{ steps.tag.outputs.name }}
+          FORK: ${{ matrix.fork }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/sync_key
+          chmod 600 ~/.ssh/sync_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/sync_key -o IdentitiesOnly=yes"
+          # No --force: main only fast-forwards, so a fork that drifted fails loudly.
+          git push "git@github.com:$FORK.git" "$TAG^{commit}:refs/heads/main" "refs/tags/$TAG:refs/tags/$TAG"

@@ -2,7 +2,8 @@ name: Sync forks
 
 # Pushes each release (v* tag) to the organization forks: the fork's main is
 # fast-forwarded to the tagged commit and the tag itself is pushed.
-# Each fork has its own write deploy key, stored here as a secret.
+# Each fork has its own fine-grained token (Contents and Workflows: write),
+# stored here as a secret. Deploy keys cannot push changes to workflow files.
 
 on:
   push:
@@ -25,11 +26,12 @@ jobs:
       matrix:
         include:
           - fork: bonana-agents/n8n-cli
-            key: SYNC_KEY_BONANA
+            token: SYNC_TOKEN_BONANA
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Resolve tag
         id: tag
@@ -47,14 +49,9 @@ jobs:
 
       - name: Push ${{ steps.tag.outputs.name }} to ${{ matrix.fork }}
         env:
-          SSH_KEY: ${{ secrets[matrix.key] }}
+          TOKEN: ${{ secrets[matrix.token] }}
           TAG: ${{ steps.tag.outputs.name }}
           FORK: ${{ matrix.fork }}
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/sync_key
-          chmod 600 ~/.ssh/sync_key
-          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-          export GIT_SSH_COMMAND="ssh -i ~/.ssh/sync_key -o IdentitiesOnly=yes"
           # No --force: main only fast-forwards, so a fork that drifted fails loudly.
-          git push "git@github.com:$FORK.git" "$TAG^{commit}:refs/heads/main" "refs/tags/$TAG:refs/tags/$TAG"
+          git push "https://x-access-token:${TOKEN}@github.com/$FORK.git" "$TAG^{commit}:refs/heads/main" "refs/tags/$TAG:refs/tags/$TAG"

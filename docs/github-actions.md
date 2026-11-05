@@ -360,7 +360,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli#semver:^1
@@ -419,7 +419,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli#semver:^1
@@ -500,7 +500,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli#semver:^1
@@ -576,7 +576,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli#semver:^1
@@ -625,7 +625,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli#semver:^1
@@ -674,7 +674,7 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install n8n-cli
         run: npm install -g github:rverheijen/n8n-cli#semver:^1
@@ -838,7 +838,7 @@ To add an environment to the sandbox → quality_assurance → production pipeli
            ref: ${{ github.ref }}
        - uses: actions/setup-node@v5
          with:
-           node-version: '20'
+           node-version: '24'
        - name: Install n8n-cli
          run: npm install -g github:rverheijen/n8n-cli#semver:^1
        - name: Push tags
